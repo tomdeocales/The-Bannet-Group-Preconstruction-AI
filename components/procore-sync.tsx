@@ -15,6 +15,8 @@ import {
   RotateCcw,
   Loader2,
   Info,
+  Bell,
+  User,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -119,13 +121,32 @@ export function ProcoreSync({ selectedProject }: ProcoreSyncProps) {
   }
 
   return (
-    <div className="p-6">
+    <div className="pt-0 pr-0 pb-1 pl-0 space-y-2 h-full flex flex-col min-h-0">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-foreground">Procore Sync</h1>
-        <p className="text-sm text-muted-foreground">{selectedProject}</p>
+      <div className="flex items-center justify-between px-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Procore Sync</h1>
+          <p className="text-sm text-muted-foreground">{selectedProject}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" className="relative">
+            <Bell className="w-5 h-5" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+          </Button>
+          <div className="flex items-center gap-2 pl-3 border-l border-border">
+            <div className="w-9 h-9 rounded-full bg-bannett-navy flex items-center justify-center">
+              <User className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-foreground">Sarah Chen</p>
+              <p className="text-xs text-muted-foreground">Project Manager</p>
+            </div>
+          </div>
+        </div>
       </div>
 
+      <Card className="shadow-sm flex-1 min-h-0">
+        <CardContent className="p-6 h-full overflow-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
       <Tabs defaultValue="status" className="space-y-6">
         <TabsList>
           <TabsTrigger value="status">Connection Status</TabsTrigger>
@@ -418,6 +439,8 @@ export function ProcoreSync({ selectedProject }: ProcoreSyncProps) {
           </Card>
         </TabsContent>
       </Tabs>
+        </CardContent>
+      </Card>
     </div>
   )
 }

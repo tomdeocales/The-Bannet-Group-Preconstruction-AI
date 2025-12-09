@@ -17,6 +17,8 @@ import {
   ExternalLink,
   Phone,
   Mail,
+  Bell,
+  User,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -163,36 +165,58 @@ export function SubcontractorMatching({ selectedProject }: SubcontractorMatching
   }
 
   return (
-    <div className="p-6">
+    <div className="pt-0 pr-0 pb-1 pl-0 space-y-2 h-full flex flex-col min-h-0">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-foreground">Subcontractor Matching</h1>
-        <p className="text-sm text-muted-foreground">{selectedProject}</p>
+      <div className="flex items-center justify-between px-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Subcontractor Matching</h1>
+          <p className="text-sm text-muted-foreground">{selectedProject}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" className="relative">
+            <Bell className="w-5 h-5" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+          </Button>
+          <div className="flex items-center gap-2 pl-3 border-l border-border">
+            <div className="w-9 h-9 rounded-full bg-bannett-navy flex items-center justify-center">
+              <User className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-foreground">Sarah Chen</p>
+              <p className="text-xs text-muted-foreground">Project Manager</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Step Indicator */}
-      <div className="flex items-center gap-2 mb-8">
-        {[1, 2, 3].map((s) => (
-          <div key={s} className="flex items-center">
-            <div
-              className={cn(
-                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors",
-                step >= s ? "bg-bannett-navy text-primary-foreground" : "bg-muted text-muted-foreground",
-              )}
-            >
-              {step > s ? <Check className="w-4 h-4" /> : s}
-            </div>
-            <span
-              className={cn("ml-2 text-sm hidden sm:inline", step >= s ? "text-foreground" : "text-muted-foreground")}
-            >
-              {s === 1 && "Job Details"}
-              {s === 2 && "AI Ranking"}
-              {s === 3 && "Selection"}
-            </span>
-            {s < 3 && <ChevronRight className="w-4 h-4 mx-3 text-muted-foreground" />}
+      <Card className="shadow-sm flex-1 min-h-0">
+        <CardContent className="p-6 h-full overflow-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
+          {/* Step Indicator */}
+          <div className="flex items-center gap-2 mb-8">
+            {[1, 2, 3].map((s) => (
+              <div key={s} className="flex items-center">
+                <div
+                  className={cn(
+                    "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors",
+                    step >= s ? "bg-bannett-navy text-primary-foreground" : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {step > s ? <Check className="w-4 h-4" /> : s}
+                </div>
+                <span
+                  className={cn(
+                    "ml-2 text-sm hidden sm:inline",
+                    step >= s ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {s === 1 && "Job Details"}
+                  {s === 2 && "AI Ranking"}
+                  {s === 3 && "Selection"}
+                </span>
+                {s < 3 && <ChevronRight className="w-4 h-4 mx-3 text-muted-foreground" />}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
       {/* Step 1: Job Details */}
       {step === 1 && (
@@ -618,6 +642,8 @@ export function SubcontractorMatching({ selectedProject }: SubcontractorMatching
           </CardContent>
         </Card>
       )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

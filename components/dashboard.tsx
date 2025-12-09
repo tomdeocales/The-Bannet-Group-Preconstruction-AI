@@ -142,6 +142,81 @@ const activityFeed = [
       uploadedBy: "John Mitchell",
     },
   },
+  {
+    id: 6,
+    message: "AI refined 12 curtain wall segments along grid D",
+    time: "5 hours ago",
+    type: "parsing",
+    details: {
+      sheet: "A07 - Curtain Wall Elevation",
+      elements: { walls: 12, doors: 6, windows: 18 },
+      confidence: 89,
+      issues: ["Potential duplicate mullion at Axis D4"],
+    },
+  },
+  {
+    id: 7,
+    message: "Estimate costs re-aligned to 2025 steel index",
+    time: "7 hours ago",
+    type: "estimate",
+    details: {
+      phase: "Phase 2 - Structure",
+      totalCost: "$2,038,400",
+      lineItems: 221,
+      pendingReview: 18,
+    },
+  },
+  {
+    id: 8,
+    message: "Shortlisted 4 steel subs for bid invite",
+    time: "9 hours ago",
+    type: "matching",
+    details: {
+      package: "Structural Steel Package",
+      recommendations: [
+        { name: "IronBridge Fabricators", score: 92 },
+        { name: "Keystone Steelworks", score: 90 },
+        { name: "Liberty Beam Co.", score: 88 },
+        { name: "Delaware Valley Steel", score: 86 },
+      ],
+    },
+  },
+  {
+    id: 9,
+    message: "Zoning review flagged stair pressurization note",
+    time: "11 hours ago",
+    type: "zoning",
+    details: {
+      document: "Fire Code Addendum FC-18",
+      issue: "Pressurization relief missing on Stair 2",
+      requirement: "Provide relief damper per IBC 909.20",
+      recommendation: "Coordinate with mechanical for dedicated shaft relief",
+    },
+  },
+  {
+    id: 10,
+    message: "Existing conditions survey uploaded for level 3",
+    time: "Yesterday",
+    type: "upload",
+    details: {
+      sheets: 5,
+      totalPages: 12,
+      fileSize: "18.6 MB",
+      uploadedBy: "Leah Porter",
+    },
+  },
+  {
+    id: 11,
+    message: "AI reclassified 6 fire-rated doors to 90-minute assemblies",
+    time: "Yesterday",
+    type: "parsing",
+    details: {
+      sheet: "A12 - Life Safety Plan",
+      elements: { walls: 18, doors: 12, windows: 6 },
+      confidence: 91,
+      issues: ["Verify hardware for Stair 1 door to meet panic requirements"],
+    },
+  },
 ]
 
 export function Dashboard({ selectedProject, setActiveModule }: DashboardProps) {
@@ -164,9 +239,9 @@ export function Dashboard({ selectedProject, setActiveModule }: DashboardProps) 
   })
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="pt-0 pr-0 pb-1 pl-0 space-y-2 h-full flex flex-col min-h-0">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-6">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground">{today}</p>
@@ -188,140 +263,146 @@ export function Dashboard({ selectedProject, setActiveModule }: DashboardProps) 
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpiData.map((kpi) => (
-          <Card
-            key={kpi.label}
-            className="cursor-pointer hover:shadow-md transition-shadow bg-card"
-            onClick={() => setSelectedKpi(kpi)}
-          >
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">{kpi.label}</p>
-                  <p className="text-3xl font-semibold text-card-foreground">{kpi.value}</p>
-                  <div className="flex items-center gap-1 mt-2">
-                    <TrendingUp className="w-3 h-3 text-success" />
-                    <span className="text-xs text-muted-foreground">{kpi.change}</span>
-                  </div>
-                </div>
-                <div className={`w-12 h-12 rounded-xl ${kpi.color} flex items-center justify-center`}>
-                  <kpi.icon className="w-6 h-6 text-primary-foreground" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Activity Feed */}
-        <Card className="lg:col-span-2 bg-card">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg text-card-foreground">Recent Activity</CardTitle>
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search activity..."
-                    className="pl-9 w-48 h-9"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <Button variant="outline" size="sm" onClick={() => setFilterType(filterType ? null : "parsing")}>
-                  <Filter className="w-4 h-4 mr-1" />
-                  Filter
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {filteredActivity.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                onClick={() => setSelectedActivity(item)}
+      <Card className="shadow-sm flex-1 min-h-0">
+        <CardContent className="space-y-6 p-6 h-full overflow-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
+          {/* KPI Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {kpiData.map((kpi) => (
+              <Card
+                key={kpi.label}
+                className="cursor-pointer hover:shadow-md transition-shadow bg-card"
+                onClick={() => setSelectedKpi(kpi)}
               >
-                <div className="w-8 h-8 rounded-full bg-bannett-navy/10 flex items-center justify-center flex-shrink-0">
-                  {item.type === "parsing" && <FileText className="w-4 h-4 text-bannett-navy" />}
-                  {item.type === "matching" && <Users className="w-4 h-4 text-bannett-blue" />}
-                  {item.type === "zoning" && <AlertTriangle className="w-4 h-4 text-warning" />}
-                  {item.type === "estimate" && <Calculator className="w-4 h-4 text-bannett-light" />}
-                  {item.type === "upload" && <FileUp className="w-4 h-4 text-success" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-card-foreground">{item.message}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Clock className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">{item.time}</span>
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">{kpi.label}</p>
+                      <p className="text-3xl font-semibold text-card-foreground">{kpi.value}</p>
+                      <div className="flex items-center gap-1 mt-2">
+                        <TrendingUp className="w-3 h-3 text-success" />
+                        <span className="text-xs text-muted-foreground">{kpi.change}</span>
+                      </div>
+                    </div>
+                    <div className={`w-12 h-12 rounded-xl ${kpi.color} flex items-center justify-center`}>
+                      <kpi.icon className="w-6 h-6 text-primary-foreground" />
+                    </div>
                   </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </div>
+                </CardContent>
+              </Card>
             ))}
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Quick Actions */}
-        <Card className="bg-card">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg text-card-foreground">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button
-              className="w-full justify-start bg-bannett-navy hover:bg-bannett-navy/90"
-              onClick={() => setActiveModule("estimator")}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Start New Estimate
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start bg-transparent"
-              onClick={() => setActiveModule("zoning")}
-            >
-              <FileUp className="w-4 h-4 mr-2" />
-              Upload Zoning Documents
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start bg-transparent"
-              onClick={() => setActiveModule("subcontractor")}
-            >
-              <Users className="w-4 h-4 mr-2" />
-              Review Sub Recommendations
-            </Button>
-
-            {/* Project Stats */}
-            <div className="pt-4 mt-4 border-t border-border">
-              <h3 className="text-sm font-medium text-card-foreground mb-3">Project Status</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Completion</span>
-                  <span className="text-sm font-medium text-card-foreground">34%</span>
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            {/* Activity Feed */}
+            <div className="lg:col-span-2">
+              <div className="flex items-center justify-between px-1 pt-1 pb-3">
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-lg text-card-foreground">Recent Activity</CardTitle>
+                  <Badge variant="secondary">{filteredActivity.length} updates</Badge>
                 </div>
-                <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full w-[34%] bg-bannett-navy rounded-full" />
-                </div>
-                <div className="grid grid-cols-2 gap-3 pt-2">
-                  <div className="p-3 rounded-lg bg-muted/50">
-                    <p className="text-xs text-muted-foreground">Est. Budget</p>
-                    <p className="text-lg font-semibold text-card-foreground">$4.2M</p>
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search activity..."
+                      className="pl-9 w-48 h-9"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                   </div>
-                  <div className="p-3 rounded-lg bg-muted/50">
-                    <p className="text-xs text-muted-foreground">Timeline</p>
-                    <p className="text-lg font-semibold text-card-foreground">18 mo</p>
-                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setFilterType(filterType ? null : "parsing")}>
+                    <Filter className="w-4 h-4 mr-1" />
+                    Filter
+                  </Button>
                 </div>
               </div>
+              <div className="space-y-3 px-1 py-1 max-h-[480px] overflow-y-hidden hover:overflow-y-auto transition-[overflow] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
+                {filteredActivity.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => setSelectedActivity(item)}
+                  >
+                    <div className="w-8 h-8 rounded-full bg-bannett-navy/10 flex items-center justify-center flex-shrink-0">
+                      {item.type === "parsing" && <FileText className="w-4 h-4 text-bannett-navy" />}
+                      {item.type === "matching" && <Users className="w-4 h-4 text-bannett-blue" />}
+                      {item.type === "zoning" && <AlertTriangle className="w-4 h-4 text-warning" />}
+                      {item.type === "estimate" && <Calculator className="w-4 h-4 text-bannett-light" />}
+                      {item.type === "upload" && <FileUp className="w-4 h-4 text-success" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-card-foreground">{item.message}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Clock className="w-3 h-3 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">{item.time}</span>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                ))}
+              </div>
+              <div className="h-px bg-black/15 mt-2" />
             </div>
-          </CardContent>
-        </Card>
-      </div>
+
+            {/* Quick Actions */}
+            <Card className="bg-card flex flex-col">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg text-card-foreground">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button
+                  className="w-full justify-start bg-bannett-navy hover:bg-bannett-navy/90"
+                  onClick={() => setActiveModule("estimator")}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Start New Estimate
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start bg-transparent"
+                  onClick={() => setActiveModule("zoning")}
+                >
+                  <FileUp className="w-4 h-4 mr-2" />
+                  Upload Zoning Documents
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start bg-transparent"
+                  onClick={() => setActiveModule("subcontractor")}
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  Review Sub Recommendations
+                </Button>
+
+                {/* Project Stats */}
+                <div className="pt-4 mt-4 border-t border-border">
+                  <h3 className="text-sm font-medium text-card-foreground mb-3">Project Status</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Completion</span>
+                      <span className="text-sm font-medium text-card-foreground">34%</span>
+                    </div>
+                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full w-[34%] bg-bannett-navy rounded-full" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <div className="p-3 rounded-lg bg-muted/50">
+                        <p className="text-xs text-muted-foreground">Est. Budget</p>
+                        <p className="text-lg font-semibold text-card-foreground">$4.2M</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted/50">
+                        <p className="text-xs text-muted-foreground">Timeline</p>
+                        <p className="text-lg font-semibold text-card-foreground">18 mo</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* KPI Detail Sheet */}
       <Sheet open={!!selectedKpi} onOpenChange={() => setSelectedKpi(null)}>
