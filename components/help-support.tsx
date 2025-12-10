@@ -7,6 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const faqs = [
   {
@@ -31,7 +39,11 @@ const faqs = [
   }
 ]
 
-export function HelpSupport() {
+interface HelpSupportProps {
+  onLogout?: () => void
+}
+
+export function HelpSupport({ onLogout }: HelpSupportProps) {
   return (
     <div className="pt-0 pr-0 pb-1 pl-0 space-y-2 flex flex-col h-full min-h-0">
       {/* Header */}
@@ -40,18 +52,56 @@ export function HelpSupport() {
           <h1 className="text-2xl font-semibold text-foreground">Help & Support</h1>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
-          </Button>
-          <div className="flex items-center gap-2 pl-3 border-l border-border">
-            <div className="w-9 h-9 rounded-full bg-bannett-navy flex items-center justify-center">
-              <User className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-medium text-foreground">Sarah Chen</p>
-              <p className="text-xs text-muted-foreground">Project Manager</p>
-            </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-72">
+              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="flex flex-col items-start gap-1">
+                <span className="text-sm font-medium">Support ticket updated</span>
+                <span className="text-xs text-muted-foreground">Zoning checklist guidance posted</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex flex-col items-start gap-1">
+                <span className="text-sm font-medium">New tutorial</span>
+                <span className="text-xs text-muted-foreground">Watch “Estimate QA best practices”</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex flex-col items-start gap-1">
+                <span className="text-sm font-medium">Release note</span>
+                <span className="text-xs text-muted-foreground">Improved Procore sync stability</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <div className="flex items-center gap-3 pl-3 border-l border-bannett-navy/50">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="pl-1 pr-3 py-1 h-11 rounded-full hover:bg-muted/50 focus-visible:ring-0 focus-visible:outline-none"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-full bg-bannett-navy flex items-center justify-center">
+                      <User className="w-5 h-5 text-primary-foreground" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-foreground leading-tight">Sarah Chen</p>
+                      <p className="text-xs text-muted-foreground leading-tight">Project Manager</p>
+                    </div>
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Profile</DropdownMenuItem>
+                <DropdownMenuItem onClick={onLogout}>Logout</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

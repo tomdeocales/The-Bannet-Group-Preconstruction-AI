@@ -14,6 +14,7 @@ import {
   Settings,
   HelpCircle,
   Check,
+  LogOut,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
@@ -41,9 +42,16 @@ interface SidebarProps {
   setActiveModule: (module: ModuleType) => void
   selectedProject: string
   setSelectedProject: (project: string) => void
+  onLogout?: () => void
 }
 
-export function Sidebar({ activeModule, setActiveModule, selectedProject, setSelectedProject }: SidebarProps) {
+export function Sidebar({
+  activeModule,
+  setActiveModule,
+  selectedProject,
+  setSelectedProject,
+  onLogout,
+}: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("")
 
   const filteredNav = navItems.filter((item) => item.label.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -162,10 +170,17 @@ export function Sidebar({ activeModule, setActiveModule, selectedProject, setSel
       {/* Procore Badge */}
       <div className="mx-4 h-[1px] bg-sidebar-border" />
       <div className="p-4">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sidebar-accent">
+        <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-sidebar-accent text-center">
           <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
           <span className="text-xs text-muted-foreground">Connected to Procore</span>
         </div>
+        <button
+          onClick={onLogout}
+          className="mt-3 w-full flex items-center gap-2 justify-center px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-red-100 transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          Logout
+        </button>
       </div>
     </aside>
   )

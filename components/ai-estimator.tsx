@@ -35,11 +35,20 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Progress } from "@/components/ui/progress"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
 interface AIEstimatorProps {
   selectedProject: string
+  onLogout?: () => void
 }
 
 type Step = 1 | 2 | 3 | 4
@@ -115,7 +124,7 @@ const estimateData = [
   },
 ]
 
-export function AIEstimator({ selectedProject }: AIEstimatorProps) {
+export function AIEstimator({ selectedProject, onLogout }: AIEstimatorProps) {
   const [step, setStep] = useState<Step>(1)
   const [uploadedSheets, setUploadedSheets] = useState<typeof mockSheets>([])
   const [isDragging, setIsDragging] = useState(false)
@@ -210,18 +219,56 @@ export function AIEstimator({ selectedProject }: AIEstimatorProps) {
           <p className="text-sm text-muted-foreground">{selectedProject}</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
-          </Button>
-          <div className="flex items-center gap-2 pl-3 border-l border-border">
-            <div className="w-9 h-9 rounded-full bg-bannett-navy flex items-center justify-center">
-              <User className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-medium text-foreground">Sarah Chen</p>
-              <p className="text-xs text-muted-foreground">Project Manager</p>
-            </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-72">
+              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="flex flex-col items-start gap-1">
+                <span className="text-sm font-medium">Estimate draft ready</span>
+                <span className="text-xs text-muted-foreground">Foundation package at 85% complete</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex flex-col items-start gap-1">
+                <span className="text-sm font-medium">Parsing complete</span>
+                <span className="text-xs text-muted-foreground">12 sheets processed successfully</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex flex-col items-start gap-1">
+                <span className="text-sm font-medium">Zoning alert</span>
+                <span className="text-xs text-muted-foreground">ADA parking compliance flagged</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <div className="flex items-center gap-3 pl-3 border-l border-bannett-navy/50">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="pl-1 pr-3 py-1 h-11 rounded-full hover:bg-muted/50 focus-visible:ring-0 focus-visible:outline-none"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-full bg-bannett-navy flex items-center justify-center">
+                      <User className="w-5 h-5 text-primary-foreground" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-foreground leading-tight">Sarah Chen</p>
+                      <p className="text-xs text-muted-foreground leading-tight">Project Manager</p>
+                    </div>
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Profile</DropdownMenuItem>
+                <DropdownMenuItem onClick={onLogout}>Logout</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
