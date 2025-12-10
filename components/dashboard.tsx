@@ -13,6 +13,8 @@ import {
   FileText,
   Clock,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Bell,
   User,
 } from "lucide-react"
@@ -20,7 +22,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import type { ModuleType } from "@/app/page"
 
@@ -222,8 +223,8 @@ const activityFeed = [
 export function Dashboard({ selectedProject, setActiveModule }: DashboardProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedKpi, setSelectedKpi] = useState<(typeof kpiData)[0] | null>(null)
-  const [selectedActivity, setSelectedActivity] = useState<(typeof activityFeed)[0] | null>(null)
   const [filterType, setFilterType] = useState<string | null>(null)
+  const [selectedActivity, setSelectedActivity] = useState<(typeof activityFeed)[0] | null>(activityFeed[0])
 
   const filteredActivity = activityFeed.filter((item) => {
     const matchesSearch = item.message.toLowerCase().includes(searchQuery.toLowerCase())
@@ -317,37 +318,140 @@ export function Dashboard({ selectedProject, setActiveModule }: DashboardProps) 
                   </Button>
                 </div>
               </div>
-              <div className="space-y-3 px-1 py-1 max-h-[480px] overflow-y-hidden hover:overflow-y-auto transition-[overflow] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
-                {filteredActivity.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                    onClick={() => setSelectedActivity(item)}
-                  >
-                    <div className="w-8 h-8 rounded-full bg-bannett-navy/10 flex items-center justify-center flex-shrink-0">
-                      {item.type === "parsing" && <FileText className="w-4 h-4 text-bannett-navy" />}
-                      {item.type === "matching" && <Users className="w-4 h-4 text-bannett-blue" />}
-                      {item.type === "zoning" && <AlertTriangle className="w-4 h-4 text-warning" />}
-                      {item.type === "estimate" && <Calculator className="w-4 h-4 text-bannett-light" />}
-                      {item.type === "upload" && <FileUp className="w-4 h-4 text-success" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-card-foreground">{item.message}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Clock className="w-3 h-3 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">{item.time}</span>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          <div className="space-y-3 px-1 py-1 max-h-[480px] overflow-y-hidden hover:overflow-y-auto transition-[overflow] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
+            {filteredActivity.map((item) => (
+              <div key={item.id} className="space-y-2">
+                <div
+                  className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                    selectedActivity?.id === item.id ? "bg-muted/50" : "hover:bg-muted/50"
+                  }`}
+                  onClick={() => setSelectedActivity(item.id === selectedActivity?.id ? null : item)}
+                >
+                  <div className="w-8 h-8 rounded-full bg-bannett-navy/10 flex items-center justify-center flex-shrink-0">
+                    {item.type === "parsing" && <FileText className="w-4 h-4 text-bannett-navy" />}
+                    {item.type === "matching" && <Users className="w-4 h-4 text-bannett-blue" />}
+                    {item.type === "zoning" && <AlertTriangle className="w-4 h-4 text-warning" />}
+                    {item.type === "estimate" && <Calculator className="w-4 h-4 text-bannett-light" />}
+                    {item.type === "upload" && <FileUp className="w-4 h-4 text-success" />}
                   </div>
-                ))}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-card-foreground">{item.message}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Clock className="w-3 h-3 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">{item.time}</span>
+                    </div>
+                  </div>
+                  {selectedActivity?.id === item.id ? (
+                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                  )}
+                </div>
+                {selectedActivity?.id === item.id && (
+                  <div className="mt-1 rounded-md bg-muted/40 px-3 py-3 pl-11 space-y-3 text-sm">
+                    {item.type === "parsing" && (
+                      <>
+                        <div className="p-2 rounded-lg bg-muted/60">
+                          <p className="text-xs font-medium mb-1">Sheet Information</p>
+                          <p className="text-xs text-muted-foreground">{item.details.sheet}</p>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="p-2 rounded-lg bg-muted/60 text-center">
+                            <p className="text-lg font-semibold text-bannett-navy">{item.details.elements.walls}</p>
+                            <p className="text-[11px] text-muted-foreground">Walls</p>
+                          </div>
+                          <div className="p-2 rounded-lg bg-muted/60 text-center">
+                            <p className="text-lg font-semibold text-bannett-blue">{item.details.elements.doors}</p>
+                            <p className="text-[11px] text-muted-foreground">Doors</p>
+                          </div>
+                          <div className="p-2 rounded-lg bg-muted/60 text-center">
+                            <p className="text-lg font-semibold text-bannett-light">{item.details.elements.windows}</p>
+                            <p className="text-[11px] text-muted-foreground">Windows</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between p-2 rounded-lg bg-success/10">
+                          <span className="text-xs">Confidence Score</span>
+                          <span className="font-semibold text-success">{item.details.confidence}%</span>
+                        </div>
+                        {item.details.issues.length > 0 && (
+                          <div className="p-2 rounded-lg bg-warning/10 space-y-1">
+                            <p className="text-xs font-medium text-warning">Issues Detected</p>
+                            {item.details.issues.map((issue: string, i: number) => (
+                              <p key={i} className="text-xs text-muted-foreground">
+                                {issue}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                    {item.type === "matching" && (
+                      <>
+                        <p className="text-xs text-muted-foreground">{item.details.package}</p>
+                        <div className="space-y-1.5">
+                          {item.details.recommendations.map((rec: any, i: number) => (
+                            <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/60">
+                              <span className="text-sm font-medium">{rec.name}</span>
+                              <Badge className="bg-bannett-navy text-[11px] px-2 py-0">{rec.score}% match</Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                    {item.type === "zoning" && (
+                      <>
+                        <div className="p-3 rounded-lg bg-warning/10">
+                          <p className="text-sm font-medium text-warning">{item.details.issue}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{item.details.requirement}</p>
+                        </div>
+                        <div className="p-3 rounded-lg bg-muted/60">
+                          <p className="text-sm font-medium mb-1">Recommendation</p>
+                          <p className="text-xs text-muted-foreground">{item.details.recommendation}</p>
+                        </div>
+                      </>
+                    )}
+                    {item.type === "estimate" && (
+                      <>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="p-3 rounded-lg bg-muted/60">
+                            <p className="text-xs text-muted-foreground">Total Cost</p>
+                            <p className="text-xl font-semibold text-bannett-navy">{item.details.totalCost}</p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-muted/60">
+                            <p className="text-xs text-muted-foreground">Line Items</p>
+                            <p className="text-xl font-semibold">{item.details.lineItems}</p>
+                          </div>
+                        </div>
+                        <div className="p-2 rounded-lg bg-warning/10">
+                          <p className="text-xs">{item.details.pendingReview} items pending review</p>
+                        </div>
+                      </>
+                    )}
+                    {item.type === "upload" && (
+                      <>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="p-3 rounded-lg bg-muted/60">
+                            <p className="text-xs text-muted-foreground">Sheets</p>
+                            <p className="text-xl font-semibold">{item.details.sheets}</p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-muted/60">
+                            <p className="text-xs text-muted-foreground">File Size</p>
+                            <p className="text-xl font-semibold">{item.details.fileSize}</p>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Uploaded by {item.details.uploadedBy}</p>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
-              <div className="h-px bg-black/15 mt-2" />
-            </div>
+            ))}
+          </div>
+        </div>
 
-            {/* Quick Actions */}
-            <Card className="bg-card flex flex-col">
-              <CardHeader className="pb-3">
+        {/* Quick Actions */}
+        <Card className="bg-card flex flex-col">
+          <CardHeader className="pb-3">
                 <CardTitle className="text-lg text-card-foreground">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -476,115 +580,6 @@ export function Dashboard({ selectedProject, setActiveModule }: DashboardProps) 
         </SheetContent>
       </Sheet>
 
-      {/* Activity Detail Modal */}
-      <Dialog open={!!selectedActivity} onOpenChange={() => setSelectedActivity(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{selectedActivity?.message}</DialogTitle>
-          </DialogHeader>
-          <div className="mt-4 space-y-4">
-            {selectedActivity?.type === "parsing" && (
-              <>
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="text-sm font-medium mb-2">Sheet Information</p>
-                  <p className="text-sm text-muted-foreground">{selectedActivity.details.sheet}</p>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="p-3 rounded-lg bg-muted/50 text-center">
-                    <p className="text-2xl font-semibold text-bannett-navy">
-                      {selectedActivity.details.elements.walls}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Walls</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-muted/50 text-center">
-                    <p className="text-2xl font-semibold text-bannett-blue">
-                      {selectedActivity.details.elements.doors}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Doors</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-muted/50 text-center">
-                    <p className="text-2xl font-semibold text-bannett-light">
-                      {selectedActivity.details.elements.windows}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Windows</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-success/10">
-                  <span className="text-sm">Confidence Score</span>
-                  <span className="font-semibold text-success">{selectedActivity.details.confidence}%</span>
-                </div>
-                {selectedActivity.details.issues.length > 0 && (
-                  <div className="p-3 rounded-lg bg-warning/10">
-                    <p className="text-sm font-medium text-warning mb-1">Issues Detected</p>
-                    {selectedActivity.details.issues.map((issue: string, i: number) => (
-                      <p key={i} className="text-sm text-muted-foreground">
-                        {issue}
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-            {selectedActivity?.type === "matching" && (
-              <>
-                <p className="text-sm text-muted-foreground">{selectedActivity.details.package}</p>
-                <div className="space-y-2">
-                  {selectedActivity.details.recommendations.map((rec: any, i: number) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                      <span className="font-medium">{rec.name}</span>
-                      <Badge className="bg-bannett-navy">{rec.score}% match</Badge>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-            {selectedActivity?.type === "zoning" && (
-              <>
-                <div className="p-4 rounded-lg bg-warning/10">
-                  <p className="text-sm font-medium text-warning mb-2">{selectedActivity.details.issue}</p>
-                  <p className="text-sm text-muted-foreground">{selectedActivity.details.requirement}</p>
-                </div>
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="text-sm font-medium mb-1">Recommendation</p>
-                  <p className="text-sm text-muted-foreground">{selectedActivity.details.recommendation}</p>
-                </div>
-              </>
-            )}
-            {selectedActivity?.type === "estimate" && (
-              <>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <p className="text-xs text-muted-foreground">Total Cost</p>
-                    <p className="text-xl font-semibold text-bannett-navy">{selectedActivity.details.totalCost}</p>
-                  </div>
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <p className="text-xs text-muted-foreground">Line Items</p>
-                    <p className="text-xl font-semibold">{selectedActivity.details.lineItems}</p>
-                  </div>
-                </div>
-                <div className="p-3 rounded-lg bg-warning/10">
-                  <p className="text-sm">{selectedActivity.details.pendingReview} items pending review</p>
-                </div>
-              </>
-            )}
-            {selectedActivity?.type === "upload" && (
-              <>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <p className="text-xs text-muted-foreground">Sheets</p>
-                    <p className="text-xl font-semibold">{selectedActivity.details.sheets}</p>
-                  </div>
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <p className="text-xs text-muted-foreground">File Size</p>
-                    <p className="text-xl font-semibold">{selectedActivity.details.fileSize}</p>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">Uploaded by {selectedActivity.details.uploadedBy}</p>
-              </>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

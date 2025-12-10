@@ -34,7 +34,6 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Progress } from "@/components/ui/progress"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -591,18 +590,18 @@ export function AIEstimator({ selectedProject }: AIEstimatorProps) {
             </CardContent>
           </Card>
 
-          {/* Notes Drawer */}
-          <Sheet open={notesOpen !== null} onOpenChange={() => setNotesOpen(null)}>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Line Item Notes</SheetTitle>
-              </SheetHeader>
+          {/* Notes Modal */}
+          <Dialog open={notesOpen !== null} onOpenChange={() => setNotesOpen(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Line Item Notes</DialogTitle>
+              </DialogHeader>
               <div className="mt-4 space-y-4">
                 <Textarea placeholder="Add notes for this line item..." className="min-h-[200px]" />
                 <Button className="w-full bg-bannett-navy hover:bg-bannett-navy/90">Save Notes</Button>
               </div>
-            </SheetContent>
-          </Sheet>
+            </DialogContent>
+          </Dialog>
 
           {/* Split Modal */}
           <Dialog open={splitModalOpen} onOpenChange={setSplitModalOpen}>
