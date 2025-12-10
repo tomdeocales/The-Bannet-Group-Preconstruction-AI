@@ -314,7 +314,9 @@ export function AIEstimator({ selectedProject, onLogout }: AIEstimatorProps) {
               <div
                 className={cn(
                   "border-2 border-dashed rounded-xl p-12 text-center transition-colors",
-                  isDragging ? "border-bannett-navy bg-bannett-navy/5" : "border-border hover:border-bannett-blue",
+                  isDragging
+                    ? "border-bannett-navy bg-bannett-navy/5"
+                    : "border-border hover:border-bannett-blue hover:bg-muted/60",
                 )}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
