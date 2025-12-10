@@ -4,43 +4,42 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Bannett Group Brand Colors - Navy Blue Theme */
-  /* Changed background from greyish to white */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.2 0.04 240);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.04 240);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.04 240);
-  --primary: oklch(0.35 0.12 240);
+  /* Semantic tokens (keep Bannett blue/white palette) */
+  --background: oklch(0.985 0.002 90); /* warm off-white */
+  --foreground: oklch(0.23 0 0); /* deep charcoal */
+  --card: oklch(0.99 0.002 90);
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --primary: oklch(0.35 0.12 240); /* bannett navy */
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.97 0.005 240);
   --secondary-foreground: oklch(0.25 0.06 240);
   --muted: oklch(0.96 0.005 240);
   --muted-foreground: oklch(0.5 0.02 240);
-  --accent: oklch(0.55 0.15 240);
-  --accent-foreground: oklch(0.99 0 0);
+  --accent: oklch(0.94 0.01 240);
+  --accent-foreground: var(--foreground);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.9 0.01 240);
-  --input: oklch(0.92 0.01 240);
+  --border: oklch(0.92 0.01 240);
+  --input: var(--border);
   --ring: oklch(0.45 0.12 240);
   --chart-1: oklch(0.45 0.15 240);
   --chart-2: oklch(0.55 0.12 200);
   --chart-3: oklch(0.65 0.1 180);
   --chart-4: oklch(0.7 0.08 160);
   --chart-5: oklch(0.75 0.06 140);
-  --radius: 0.5rem;
+  --radius: 0.625rem; /* 10px per style guide */
   --sidebar: #fafafa;
   --sidebar-foreground: oklch(0.2 0.04 240);
-  --sidebar-primary: oklch(0.35 0.12 240);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
   --sidebar-accent: oklch(0.96 0.02 240);
   --sidebar-accent-foreground: oklch(0.25 0.06 240);
-  --sidebar-border: oklch(0.92 0.01 240);
-  --sidebar-ring: oklch(0.45 0.12 240);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
 
-  /* Custom Bannett colors */
+  /* Custom Bannett brand tokens */
   --bannett-navy: oklch(0.3 0.1 240);
   --bannett-blue: oklch(0.5 0.15 240);
   --bannett-light: oklch(0.6 0.12 240);
@@ -49,7 +48,8 @@
 }
 
 @theme inline {
-  --font-sans: "Geist", "Geist Fallback";
+  --font-sans: "General Sans", "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-serif: "Libre Baskerville", "Georgia", serif;
   --font-mono: "Geist Mono", "Geist Mono Fallback";
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -100,5 +100,6 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
   }
 }

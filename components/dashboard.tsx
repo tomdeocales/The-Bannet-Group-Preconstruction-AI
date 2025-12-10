@@ -253,7 +253,7 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
       {/* Header */}
       <div className="flex items-center justify-between px-6">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+          <h1 className="text-3xl md:text-4xl font-semibold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground">{today}</p>
         </div>
         <div className="flex items-center gap-3">
@@ -266,7 +266,7 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
             </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-72 [&_[data-highlighted]]:bg-accent [&_[data-highlighted]]:text-white [&_[data-highlighted]_span]:text-white [&_[data-highlighted]_p]:text-white"
+                className="w-72 [&_[data-highlighted]]:bg-accent [&_[data-highlighted]]:text-foreground [&_[data-highlighted]_span]:text-foreground [&_[data-highlighted]_p]:text-foreground"
               >
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -349,7 +349,7 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
             <div className="lg:col-span-2">
               <div className="flex items-center justify-between px-1 pt-1 pb-3">
                 <div className="flex items-center gap-2">
-                  <CardTitle className="text-lg text-card-foreground">Recent Activity</CardTitle>
+                  <CardTitle className="text-2xl font-semibold text-card-foreground">Recent Activity</CardTitle>
                   <Badge variant="secondary">{filteredActivity.length} updates</Badge>
                 </div>
                 <div className="flex items-center gap-2">
@@ -502,7 +502,7 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
         {/* Quick Actions */}
         <Card className="bg-card flex flex-col">
           <CardHeader className="pb-3">
-                <CardTitle className="text-lg text-card-foreground">Quick Actions</CardTitle>
+                <CardTitle className="text-2xl font-semibold text-card-foreground">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button

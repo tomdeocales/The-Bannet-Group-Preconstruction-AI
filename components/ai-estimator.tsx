@@ -215,7 +215,7 @@ export function AIEstimator({ selectedProject, onLogout, setActiveModule }: AIEs
       {/* Header */}
       <div className="flex items-center justify-between px-6">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">AI Estimator</h1>
+          <h1 className="text-3xl md:text-4xl font-semibold text-foreground">AI Estimator</h1>
           <p className="text-sm text-muted-foreground">{selectedProject}</p>
         </div>
         <div className="flex items-center gap-3">
@@ -228,7 +228,7 @@ export function AIEstimator({ selectedProject, onLogout, setActiveModule }: AIEs
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-72 [&_[data-highlighted]]:bg-accent [&_[data-highlighted]]:text-white [&_[data-highlighted]_span]:text-white [&_[data-highlighted]_p]:text-white"
+              className="w-72 [&_[data-highlighted]]:bg-accent [&_[data-highlighted]]:text-foreground [&_[data-highlighted]_span]:text-foreground [&_[data-highlighted]_p]:text-foreground"
             >
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
