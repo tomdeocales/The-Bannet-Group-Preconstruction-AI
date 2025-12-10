@@ -191,7 +191,10 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
                 <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72">
+            <DropdownMenuContent
+              align="end"
+              className="w-72 [&_[data-highlighted]]:bg-accent [&_[data-highlighted]]:text-white [&_[data-highlighted]_span]:text-white [&_[data-highlighted]_p]:text-white"
+            >
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="flex flex-col items-start gap-1">
