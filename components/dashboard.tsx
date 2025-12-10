@@ -365,7 +365,7 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
                   </Button>
                 </div>
               </div>
-          <div className="space-y-3 px-1 py-1 max-h-[480px] overflow-y-hidden hover:overflow-y-auto transition-[overflow] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
+          <div className="space-y-3 px-1 py-1 max-h-[480px] overflow-y-hidden hover:overflow-y-auto transition-[overflow] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full pb-2 border-b border-border">
             {filteredActivity.map((item) => (
               <div key={item.id} className="space-y-2">
                 <div
@@ -395,7 +395,7 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
                   )}
                 </div>
                 {selectedActivity?.id === item.id && (
-                  <div className="mt-1 rounded-md bg-muted/40 px-3 py-3 pl-11 space-y-3 text-sm">
+                  <div className="mt-1 rounded-md bg-muted/40 px-3 py-3 space-y-3 text-sm">
                     {item.type === "parsing" && (
                       <>
                         <div className="p-2 rounded-lg bg-muted/60">
