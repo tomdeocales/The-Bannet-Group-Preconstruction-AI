@@ -316,10 +316,10 @@ export function AIEstimator({ selectedProject, onLogout, setActiveModule }: AIEs
             <CardContent>
               <div
                 className={cn(
-                  "border-2 border-dashed rounded-xl p-12 text-center transition-colors",
+                  "border-[1.25px] border-dashed rounded-xl p-12 text-center transition-colors [border-style:dashed] [border-image:repeating-linear-gradient(90deg,rgba(0,0,0,0.2),rgba(0,0,0,0.2) 3px,transparent 3px,transparent 6px)_1] border-image-slice-1",
                   isDragging
                     ? "border-bannett-navy bg-bannett-navy/5"
-                    : "border-border hover:border-bannett-blue hover:bg-muted/40",
+                    : "border-border hover:bg-[#f9f9f9]",
                 )}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
