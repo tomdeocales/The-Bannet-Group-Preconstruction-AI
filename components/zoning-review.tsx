@@ -40,10 +40,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import type { ModuleType } from "@/app/page"
 
 interface ZoningReviewProps {
   selectedProject: string
   onLogout?: () => void
+  setActiveModule?: (module: ModuleType) => void
 }
 
 type Step = 1 | 2 | 3 | 4 | 5
@@ -124,7 +126,7 @@ const initialChecklist = [
   { id: 8, text: "Stormwater management plan approved", completed: false },
 ]
 
-export function ZoningReview({ selectedProject, onLogout }: ZoningReviewProps) {
+export function ZoningReview({ selectedProject, onLogout, setActiveModule }: ZoningReviewProps) {
   const [step, setStep] = useState<Step>(1)
   const [uploadedDocs, setUploadedDocs] = useState<string[]>([])
   const [isDragging, setIsDragging] = useState(false)
@@ -274,7 +276,7 @@ export function ZoningReview({ selectedProject, onLogout }: ZoningReviewProps) {
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuLabel>Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveModule?.("settings")}>Profile</DropdownMenuItem>
                 <DropdownMenuItem onClick={onLogout}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -326,7 +328,7 @@ export function ZoningReview({ selectedProject, onLogout }: ZoningReviewProps) {
                   "border-2 border-dashed rounded-xl p-12 text-center transition-colors",
                   isDragging
                     ? "border-bannett-navy bg-bannett-navy/5"
-                    : "border-border hover:border-bannett-blue hover:bg-muted/60",
+                    : "border-border hover:border-bannett-blue hover:bg-muted/40",
                 )}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}

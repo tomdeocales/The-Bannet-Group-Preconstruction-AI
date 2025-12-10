@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import type { ModuleType } from "@/app/page"
 
 const faqs = [
   {
@@ -41,9 +42,10 @@ const faqs = [
 
 interface HelpSupportProps {
   onLogout?: () => void
+  setActiveModule?: (module: ModuleType) => void
 }
 
-export function HelpSupport({ onLogout }: HelpSupportProps) {
+export function HelpSupport({ onLogout, setActiveModule }: HelpSupportProps) {
   return (
     <div className="pt-0 pr-0 pb-1 pl-0 space-y-2 flex flex-col h-full min-h-0">
       {/* Header */}
@@ -94,16 +96,16 @@ export function HelpSupport({ onLogout }: HelpSupportProps) {
                     </div>
                   </div>
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel>Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem onClick={onLogout}>Logout</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setActiveModule?.("settings")}>Profile</DropdownMenuItem>
+              <DropdownMenuItem onClick={onLogout}>Logout</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
+      </div>
       </div>
 
       {/* Content */}

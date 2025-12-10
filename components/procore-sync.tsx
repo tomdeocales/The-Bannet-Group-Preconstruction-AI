@@ -36,10 +36,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import type { ModuleType } from "@/app/page"
 
 interface ProcoreSyncProps {
   selectedProject: string
   onLogout?: () => void
+  setActiveModule?: (module: ModuleType) => void
 }
 
 const fieldMappings = [
@@ -97,7 +99,7 @@ const syncLogs = [
   },
 ]
 
-export function ProcoreSync({ selectedProject, onLogout }: ProcoreSyncProps) {
+export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: ProcoreSyncProps) {
   const [isConnected, setIsConnected] = useState(true)
   const [isSyncing, setIsSyncing] = useState(false)
   const [mappings, setMappings] = useState(fieldMappings)
@@ -184,7 +186,7 @@ export function ProcoreSync({ selectedProject, onLogout }: ProcoreSyncProps) {
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuLabel>Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveModule?.("settings")}>Profile</DropdownMenuItem>
                 <DropdownMenuItem onClick={onLogout}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

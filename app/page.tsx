@@ -68,14 +68,32 @@ export default function Home() {
             </div>
           ) : (
             <div className="h-full min-h-0 overflow-hidden">
-              {activeModule === "estimator" && <AIEstimator selectedProject={selectedProject} onLogout={handleLogout} />}
-              {activeModule === "subcontractor" && (
-                <SubcontractorMatching selectedProject={selectedProject} onLogout={handleLogout} />
+              {activeModule === "estimator" && (
+                <AIEstimator
+                  selectedProject={selectedProject}
+                  onLogout={handleLogout}
+                  setActiveModule={setActiveModule}
+                />
               )}
-              {activeModule === "zoning" && <ZoningReview selectedProject={selectedProject} onLogout={handleLogout} />}
-              {activeModule === "procore" && <ProcoreSync selectedProject={selectedProject} onLogout={handleLogout} />}
-              {activeModule === "settings" && <SettingsView onLogout={handleLogout} />}
-              {activeModule === "help" && <HelpSupport onLogout={handleLogout} />}
+              {activeModule === "subcontractor" && (
+                <SubcontractorMatching
+                  selectedProject={selectedProject}
+                  onLogout={handleLogout}
+                  setActiveModule={setActiveModule}
+                />
+              )}
+              {activeModule === "zoning" && (
+                <ZoningReview
+                  selectedProject={selectedProject}
+                  onLogout={handleLogout}
+                  setActiveModule={setActiveModule}
+                />
+              )}
+              {activeModule === "procore" && (
+                <ProcoreSync selectedProject={selectedProject} onLogout={handleLogout} setActiveModule={setActiveModule} />
+              )}
+              {activeModule === "settings" && <SettingsView onLogout={handleLogout} setActiveModule={setActiveModule} />}
+              {activeModule === "help" && <HelpSupport onLogout={handleLogout} setActiveModule={setActiveModule} />}
             </div>
           )}
         </div>

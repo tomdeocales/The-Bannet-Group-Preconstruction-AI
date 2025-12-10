@@ -40,10 +40,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import type { ModuleType } from "@/app/page"
 
 interface SubcontractorMatchingProps {
   selectedProject: string
   onLogout?: () => void
+  setActiveModule?: (module: ModuleType) => void
 }
 
 type Step = 1 | 2 | 3
@@ -135,7 +137,7 @@ const subcontractors = [
   },
 ]
 
-export function SubcontractorMatching({ selectedProject, onLogout }: SubcontractorMatchingProps) {
+export function SubcontractorMatching({ selectedProject, onLogout, setActiveModule }: SubcontractorMatchingProps) {
   const [step, setStep] = useState<Step>(1)
   const [isGenerating, setIsGenerating] = useState(false)
   const [selectedSubs, setSelectedSubs] = useState<number[]>([])
@@ -228,7 +230,7 @@ export function SubcontractorMatching({ selectedProject, onLogout }: Subcontract
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuLabel>Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveModule?.("settings")}>Profile</DropdownMenuItem>
                 <DropdownMenuItem onClick={onLogout}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useCallback } from "react"
+import React, { useState, useCallback } from "react"
 import {
   Upload,
   FileText,
@@ -45,10 +43,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import type { ModuleType } from "@/app/page"
 
 interface AIEstimatorProps {
   selectedProject: string
   onLogout?: () => void
+  setActiveModule?: (module: ModuleType) => void
 }
 
 type Step = 1 | 2 | 3 | 4
@@ -124,7 +124,7 @@ const estimateData = [
   },
 ]
 
-export function AIEstimator({ selectedProject, onLogout }: AIEstimatorProps) {
+export function AIEstimator({ selectedProject, onLogout, setActiveModule }: AIEstimatorProps) {
   const [step, setStep] = useState<Step>(1)
   const [uploadedSheets, setUploadedSheets] = useState<typeof mockSheets>([])
   const [isDragging, setIsDragging] = useState(false)
@@ -265,7 +265,7 @@ export function AIEstimator({ selectedProject, onLogout }: AIEstimatorProps) {
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuLabel>Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveModule?.("settings")}>Profile</DropdownMenuItem>
                 <DropdownMenuItem onClick={onLogout}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -316,7 +316,7 @@ export function AIEstimator({ selectedProject, onLogout }: AIEstimatorProps) {
                   "border-2 border-dashed rounded-xl p-12 text-center transition-colors",
                   isDragging
                     ? "border-bannett-navy bg-bannett-navy/5"
-                    : "border-border hover:border-bannett-blue hover:bg-muted/60",
+                    : "border-border hover:border-bannett-blue hover:bg-muted/40",
                 )}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
@@ -547,9 +547,8 @@ export function AIEstimator({ selectedProject, onLogout }: AIEstimatorProps) {
                   </thead>
                   <tbody>
                     {estimates.map((category) => (
-                      <>
+                      <React.Fragment key={category.category}>
                         <tr
-                          key={category.category}
                           className="bg-muted/30 cursor-pointer hover:bg-muted/50"
                           onClick={() => toggleCategory(category.category)}
                         >
@@ -624,7 +623,7 @@ export function AIEstimator({ selectedProject, onLogout }: AIEstimatorProps) {
                               </td>
                             </tr>
                           ))}
-                      </>
+                      </React.Fragment>
                     ))}
                   </tbody>
                 </table>

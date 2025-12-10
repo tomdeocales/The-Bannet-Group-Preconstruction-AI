@@ -19,9 +19,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import type { ModuleType } from "@/app/page"
 
 interface SettingsViewProps {
   onLogout?: () => void
+  setActiveModule?: (module: ModuleType) => void
 }
 
 export function SettingsView({ onLogout }: SettingsViewProps) {
@@ -88,7 +90,7 @@ export function SettingsView({ onLogout }: SettingsViewProps) {
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuLabel>Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveModule?.("settings")}>Profile</DropdownMenuItem>
                 <DropdownMenuItem onClick={onLogout}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
