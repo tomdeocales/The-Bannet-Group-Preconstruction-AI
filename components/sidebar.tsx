@@ -145,7 +145,7 @@ export function Sidebar({
             "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
             activeModule === "settings"
               ? "bg-bannett-navy text-primary-foreground"
-              : "text-muted-foreground hover:bg-sidebar-accent",
+              : "text-muted-foreground hover:bg-muted",
           )}
         >
           <Settings className="w-4 h-4" />
@@ -157,7 +157,7 @@ export function Sidebar({
             "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
             activeModule === "help"
               ? "bg-bannett-navy text-primary-foreground"
-              : "text-muted-foreground hover:bg-sidebar-accent",
+              : "text-muted-foreground hover:bg-muted",
           )}
         >
           <HelpCircle className="w-4 h-4" />
@@ -174,7 +174,7 @@ export function Sidebar({
         </div>
         <button
           onClick={onLogout}
-          className="mt-3 w-full flex items-center gap-2 justify-center px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-red-100 transition-colors"
+          className="mt-3 w-full flex items-center gap-2 justify-center px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted transition-colors"
         >
           <LogOut className="w-4 h-4" />
           Logout
