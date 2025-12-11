@@ -362,7 +362,7 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setFilterType(filterType ? null : "parsing")}>
+                  <Button variant="outline" size="sm" onClick={() => {}}>
                     <Filter className="w-4 h-4 mr-1" />
                     Filter
                   </Button>

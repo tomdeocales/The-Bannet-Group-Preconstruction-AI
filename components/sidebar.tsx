@@ -54,8 +54,6 @@ export function Sidebar({
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("")
 
-  const filteredNav = navItems.filter((item) => item.label.toLowerCase().includes(searchQuery.toLowerCase()))
-
   return (
     <aside className="w-64 bg-sidebar flex flex-col h-full">
       {/* Logo */}
@@ -119,7 +117,7 @@ export function Sidebar({
       {/* Navigation */}
       <nav className="flex-1 px-3">
         <ul className="space-y-1">
-          {filteredNav.map((item) => (
+          {navItems.map((item) => (
             <li key={item.id}>
               <button
                 onClick={() => setActiveModule(item.id)}
