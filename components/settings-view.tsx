@@ -41,7 +41,7 @@ export function SettingsView({ onLogout }: SettingsViewProps) {
       {/* Header */}
       <div className="flex items-center justify-between px-6">
         <div>
-          <h1 className="text-3xl md:text-4xl font-semibold text-foreground">Settings</h1>
+          <h1 className="text-xl md:text-2xl font-semibold text-foreground">Settings</h1>
         </div>
         <div className="flex items-center gap-3">
           <DropdownMenu>

@@ -60,7 +60,7 @@ export function Login({ onLogin }: LoginProps) {
                 <Mail className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
                 <Input
                   type="email"
-                  className="pl-10 h-11 border border-border"
+                  className="pl-10 h-11 border border-border bg-white"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@bannett.com"
@@ -106,7 +106,7 @@ export function Login({ onLogin }: LoginProps) {
                 <Lock className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
                 <Input
                   type="password"
-                  className="pl-10 h-11 border border-border"
+                  className="pl-10 h-11 border border-border bg-white"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
