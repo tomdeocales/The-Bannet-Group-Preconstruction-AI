@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server"
-import { procoreRequest } from "@/lib/procoreClient"
 
 export async function GET(
   _req: NextRequest,
@@ -14,26 +13,16 @@ export async function GET(
   // ✅ unwrap the params promise
   const { projectId } = await params
 
-  try {
-    const data = await procoreRequest(
-      `/rest/v1.1/projects/${projectId}/vendors`,
-      token
-    )
+  const vendors = [
+    { id: 9011, name: "Summit Mechanical Solutions", trade: "HVAC", phone: "(503) 555-0123", city: "Portland", state: "OR" },
+    { id: 9012, name: "ElectroPro Commercial", trade: "Electrical", phone: "(503) 555-0144", city: "Beaverton", state: "OR" },
+    { id: 9013, name: "Cascade Plumbing & Fire", trade: "Plumbing", phone: "(503) 555-0198", city: "Gresham", state: "OR" },
+    { id: 9014, name: "Atlas Structural Steel", trade: "Steel", phone: "(360) 555-0111", city: "Vancouver", state: "WA" },
+    { id: 9015, name: "Foundation Masters Inc", trade: "Concrete", phone: "(503) 555-0136", city: "Tigard", state: "OR" },
+    { id: 9016, name: "Northwest Interiors Group", trade: "Drywall", phone: "(503) 555-0162", city: "Portland", state: "OR" },
+    { id: 9017, name: "Pioneer Fire Protection", trade: "Fire Protection", phone: "(503) 555-0179", city: "Hillsboro", state: "OR" },
+    { id: 9018, name: "Evergreen Siteworks", trade: "Civil/Site", phone: "(503) 555-0158", city: "Clackamas", state: "OR" },
+  ]
 
-    const vendors = (Array.isArray(data) ? data : []).map((v: any) => ({
-      id: v.id,
-      name: v.name,
-      trade: v.trade_type || null,
-      phone: v.phone || null,
-      city: v.city || null,
-      state: v.state || null,
-    }))
-
-    return NextResponse.json({ vendors })
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "Failed to fetch vendors", detail: String(err) },
-      { status: 500 }
-    )
-  }
+  return NextResponse.json({ mock: true, projectId, vendors })
 }

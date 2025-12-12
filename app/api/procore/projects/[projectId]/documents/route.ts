@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server"
-import { procoreRequest } from "@/lib/procoreClient"
 
 export async function GET(
   _req: NextRequest,
@@ -16,24 +15,26 @@ export async function GET(
 
   const { projectId } = await params   // ✅ unwrap params
 
-  try {
-    const data = await procoreRequest(
-      `/rest/v1.1/projects/${projectId}/documents`,
-      token
-    )
+  const documents = [
+    {
+      id: 44001,
+      name: "Zoning_Summary_Executive.pdf",
+      path: "Project Documents > Preconstruction > Zoning",
+      updated_at: "2025-12-09T16:15:00Z",
+    },
+    {
+      id: 44002,
+      name: "Estimate_Draft_Phase_1_Foundation.xlsx",
+      path: "Project Documents > Preconstruction > Estimates",
+      updated_at: "2025-12-09T14:34:00Z",
+    },
+    {
+      id: 44003,
+      name: "Drawings_Set_A01-A12.pdf",
+      path: "Project Documents > Drawings",
+      updated_at: "2025-12-08T10:45:00Z",
+    },
+  ]
 
-    const documents = (Array.isArray(data) ? data : []).map((d: any) => ({
-      id: d.id,
-      name: d.name,
-      path: d.path,
-      updated_at: d.updated_at,
-    }))
-
-    return NextResponse.json({ documents })
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "Failed to fetch documents", detail: String(err) },
-      { status: 500 }
-    )
-  }
+  return NextResponse.json({ mock: true, projectId, documents })
 }

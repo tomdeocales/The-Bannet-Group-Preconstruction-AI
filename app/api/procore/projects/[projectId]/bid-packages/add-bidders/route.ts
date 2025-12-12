@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server"
-import { procoreRequest } from "@/lib/procoreClient"
 
 type AddBiddersBody = {
   bidPackageId: number
@@ -32,26 +31,14 @@ export async function POST(
     )
   }
 
-  try {
-    for (const vendorId of vendorIds) {
-      await procoreRequest(
-        `/rest/v1.1/projects/${projectId}/bid_packages/${bidPackageId}/bidders`,
-        token,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            vendor_id: vendorId,
-            notes: notes || "Added via Preconstruction AI mockup",
-          }),
-        }
-      )
-    }
-
-    return NextResponse.json({ ok: true })
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "Failed to add bidders", detail: String(err) },
-      { status: 500 }
-    )
-  }
+  // Mock push: accept payload and return a simulated result.
+  return NextResponse.json({
+    mock: true,
+    ok: true,
+    projectId,
+    bidPackageId,
+    addedVendors: vendorIds,
+    notes: notes || "Added via Preconstruction AI tool",
+    timestamp: new Date().toISOString(),
+  })
 }

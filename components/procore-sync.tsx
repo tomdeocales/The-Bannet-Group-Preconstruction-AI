@@ -106,6 +106,20 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
   const [editMappingModal, setEditMappingModal] = useState<(typeof fieldMappings)[0] | null>(null)
   const [expandedLog, setExpandedLog] = useState<number | null>(null)
   const [infoModalOpen, setInfoModalOpen] = useState(false)
+  const [connectModalOpen, setConnectModalOpen] = useState(false)
+  const [disconnectModalOpen, setDisconnectModalOpen] = useState(false)
+  const [lastSyncAt, setLastSyncAt] = useState("Dec 9, 2025 at 2:34 PM")
+  const [logs, setLogs] = useState(syncLogs)
+
+  const formatTimestamp = (date: Date) => {
+    const datePart = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    const timePart = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+    return `${datePart} at ${timePart}`
+  }
+
+  const appendLog = (log: Omit<(typeof syncLogs)[0], "id">) => {
+    setLogs((prev) => [{ id: Math.max(0, ...prev.map((l) => l.id)) + 1, ...log }, ...prev])
+  }
 
   const handleReauthorize = () => {
     setIsSyncing(true)
@@ -113,15 +127,33 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
       setIsSyncing(false)
       setIsConnected(true)
       toast.success("Connection reauthorized successfully")
+      appendLog({
+        action: "Connection reauthorized",
+        timestamp: formatTimestamp(new Date()),
+        status: "success",
+        details: "OAuth session refreshed and permissions verified.",
+      })
     }, 2000)
   }
 
   const handleSync = () => {
+    if (!isConnected) {
+      toast.error("Not connected to Procore", { description: "Reconnect to run a sync." })
+      return
+    }
+
     setIsSyncing(true)
     setTimeout(() => {
       setIsSyncing(false)
+      setLastSyncAt(formatTimestamp(new Date()))
       toast.success("Sync completed successfully", {
         description: "All data has been synchronized with Procore.",
+      })
+      appendLog({
+        action: "Manual sync completed",
+        timestamp: formatTimestamp(new Date()),
+        status: "success",
+        details: "Estimates, subcontractor selections, and zoning artifacts synced to Procore.",
       })
     }, 3000)
   }
@@ -227,7 +259,7 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
                     <p className="font-medium text-card-foreground">
                       {isConnected ? "Connected to Procore" : "Disconnected"}
                     </p>
-                    <p className="text-sm text-muted-foreground">Last sync: Dec 9, 2025 at 2:34 PM</p>
+                    <p className="text-sm text-muted-foreground">Last sync: {lastSyncAt}</p>
                   </div>
                 </div>
                 <Badge className={isConnected ? "bg-success text-primary-foreground" : "bg-destructive"}>
@@ -236,14 +268,15 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
               </div>
 
               <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    window.location.href = "/api/procore/login"
-                  }}
-                >
-                  Connect to Procore
-                </Button>
+                {isConnected ? (
+                  <Button variant="outline" onClick={() => setDisconnectModalOpen(true)} disabled={isSyncing}>
+                    Disconnect
+                  </Button>
+                ) : (
+                  <Button onClick={() => setConnectModalOpen(true)} className="bg-bannett-navy hover:bg-bannett-navy/90">
+                    Connect to Procore
+                  </Button>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -274,7 +307,11 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
               </div>
 
               <div className="flex gap-3">
-                <Button onClick={handleSync} className="bg-bannett-navy hover:bg-bannett-navy/90" disabled={isSyncing}>
+                <Button
+                  onClick={handleSync}
+                  className="bg-bannett-navy hover:bg-bannett-navy/90"
+                  disabled={isSyncing || !isConnected}
+                >
                   {isSyncing ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -294,6 +331,104 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
               </div>
             </CardContent>
           </Card>
+
+          {/* Connect Modal */}
+          <Dialog open={connectModalOpen} onOpenChange={setConnectModalOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Connect to Procore</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <p className="text-sm text-muted-foreground">
+                  Authorize this tool to access your Procore projects for syncing estimates, subcontractor selections,
+                  and zoning review artifacts.
+                </p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-success" />
+                    <span className="text-card-foreground">Read projects and budgets</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-success" />
+                    <span className="text-card-foreground">Create bid package entries</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-success" />
+                    <span className="text-card-foreground">Upload documents to project files</span>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setConnectModalOpen(false)} disabled={isSyncing}>
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-bannett-navy hover:bg-bannett-navy/90"
+                  onClick={() => {
+                    setIsSyncing(true)
+                    setTimeout(() => {
+                      setIsSyncing(false)
+                      setIsConnected(true)
+                      setConnectModalOpen(false)
+                      toast.success("Connected to Procore", { description: "Connection established and verified." })
+                      appendLog({
+                        action: "Connection established",
+                        timestamp: formatTimestamp(new Date()),
+                        status: "success",
+                        details: "Procore connection authorized and ready for syncing.",
+                      })
+                    }, 1500)
+                  }}
+                  disabled={isSyncing}
+                >
+                  {isSyncing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Connecting...
+                    </>
+                  ) : (
+                    "Authorize"
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Disconnect Modal */}
+          <Dialog open={disconnectModalOpen} onOpenChange={setDisconnectModalOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Disconnect from Procore?</DialogTitle>
+              </DialogHeader>
+              <div className="py-4 space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Disconnecting will pause syncing. You can reconnect at any time.
+                </p>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDisconnectModalOpen(false)} disabled={isSyncing}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    setDisconnectModalOpen(false)
+                    setIsConnected(false)
+                    toast.success("Disconnected", { description: "Syncing has been paused." })
+                    appendLog({
+                      action: "Connection disconnected",
+                      timestamp: formatTimestamp(new Date()),
+                      status: "warning",
+                      details: "User disconnected the Procore connection. Sync operations paused.",
+                    })
+                  }}
+                  disabled={isSyncing}
+                >
+                  Disconnect
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* Info Modal */}
           <Dialog open={infoModalOpen} onOpenChange={setInfoModalOpen}>
@@ -459,7 +594,7 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {syncLogs.map((log) => (
+                {logs.map((log) => (
                   <div
                     key={log.id}
                     className={cn(

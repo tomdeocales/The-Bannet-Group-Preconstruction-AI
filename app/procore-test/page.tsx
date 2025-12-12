@@ -15,7 +15,7 @@ export default function ProcoreTestPage() {
 
   return (
     <div className="p-4 space-y-4">
-      <h1 className="text-xl font-semibold">Procore Projects (Sandbox)</h1>
+      <h1 className="text-xl font-semibold">Procore Projects</h1>
       <pre className="text-xs whitespace-pre-wrap bg-muted p-3 rounded-md">{JSON.stringify(data, null, 2)}</pre>
     </div>
   )

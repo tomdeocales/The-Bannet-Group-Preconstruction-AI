@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server"
-import { procoreRequest } from "@/lib/procoreClient"
 
 export async function GET(
   _req: NextRequest,
@@ -16,24 +15,26 @@ export async function GET(
 
   const { projectId } = await params
 
-  try {
-    const data = await procoreRequest(
-      `/rest/v1.1/projects/${projectId}/bid_packages`,
-      token
-    )
+  const bidPackages = [
+    {
+      id: 6101,
+      title: "MEP Bid Package — Riverside Medical Center",
+      status: "Open",
+      due_date: "2025-12-19",
+    },
+    {
+      id: 6102,
+      title: "Structural Steel Package",
+      status: "Draft",
+      due_date: "2025-12-23",
+    },
+    {
+      id: 6103,
+      title: "Concrete & Foundations",
+      status: "Open",
+      due_date: "2025-12-16",
+    },
+  ]
 
-    const bidPackages = (Array.isArray(data) ? data : []).map((bp: any) => ({
-      id: bp.id,
-      title: bp.title || bp.name,
-      status: bp.status,
-      due_date: bp.due_date,
-    }))
-
-    return NextResponse.json({ bidPackages })
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "Failed to fetch bid packages", detail: String(err) },
-      { status: 500 }
-    )
-  }
+  return NextResponse.json({ mock: true, projectId, bidPackages })
 }

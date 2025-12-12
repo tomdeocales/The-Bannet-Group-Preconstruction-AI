@@ -1,12 +1,14 @@
 "use client"
 
-import { Search, Book, MessageCircle, FileText, Video, ExternalLink, ChevronRight, Mail, Bell, User } from "lucide-react"
+import { useMemo, useState } from "react"
+import { Search, Book, MessageCircle, FileText, Video, ChevronRight, Mail, Bell, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { toast } from "sonner"
 import type { ModuleType } from "@/app/page"
 
 const faqs = [
@@ -46,6 +49,24 @@ interface HelpSupportProps {
 }
 
 export function HelpSupport({ onLogout, setActiveModule }: HelpSupportProps) {
+  const [query, setQuery] = useState("")
+  const [resourceModal, setResourceModal] = useState<"docs" | "videos" | "api" | null>(null)
+  const [subject, setSubject] = useState("")
+  const [message, setMessage] = useState("")
+  const [chatOpen, setChatOpen] = useState(false)
+  const [chatDraft, setChatDraft] = useState("")
+  const [chatMessages, setChatMessages] = useState<
+    { id: number; from: "user" | "support"; text: string; time: string }[]
+  >([
+    { id: 1, from: "support", text: "Hi Sarah — how can we help today?", time: "9:02 AM" },
+  ])
+
+  const filteredFaqs = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return faqs
+    return faqs.filter((f) => `${f.question} ${f.answer}`.toLowerCase().includes(q))
+  }, [query])
+
   return (
     <div className="pt-0 pr-0 pb-1 pl-0 space-y-2 flex flex-col h-full min-h-0">
       {/* Header */}
@@ -127,13 +148,18 @@ export function HelpSupport({ onLogout, setActiveModule }: HelpSupportProps) {
               <Input
                 placeholder="Search for articles, guides, and more..."
                 className="pl-10 h-12 text-base shadow-sm"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
               />
             </div>
           </div>
 
           {/* Quick Links */}
           <div className="grid md:grid-cols-3 gap-6">
-            <Card className="hover:border-primary/50 transition-colors cursor-pointer group">
+            <Card
+              className="hover:border-primary/50 transition-colors cursor-pointer group"
+              onClick={() => setResourceModal("docs")}
+            >
               <CardHeader>
                 <div className="p-2 w-fit rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 mb-2">
                   <Book className="h-6 w-6" />
@@ -144,11 +170,23 @@ export function HelpSupport({ onLogout, setActiveModule }: HelpSupportProps) {
                 </CardDescription>
               </CardHeader>
               <CardFooter>
-                <Button variant="link" className="px-0">Read Guides <ChevronRight className="h-4 w-4 ml-1" /></Button>
+                <Button
+                  variant="link"
+                  className="px-0"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setResourceModal("docs")
+                  }}
+                >
+                  Read Guides <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
               </CardFooter>
             </Card>
 
-            <Card className="hover:border-primary/50 transition-colors cursor-pointer group">
+            <Card
+              className="hover:border-primary/50 transition-colors cursor-pointer group"
+              onClick={() => setResourceModal("videos")}
+            >
               <CardHeader>
                 <div className="p-2 w-fit rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-600 mb-2">
                   <Video className="h-6 w-6" />
@@ -159,11 +197,23 @@ export function HelpSupport({ onLogout, setActiveModule }: HelpSupportProps) {
                 </CardDescription>
               </CardHeader>
               <CardFooter>
-                <Button variant="link" className="px-0">Watch Now <ChevronRight className="h-4 w-4 ml-1" /></Button>
+                <Button
+                  variant="link"
+                  className="px-0"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setResourceModal("videos")
+                  }}
+                >
+                  Watch Now <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
               </CardFooter>
             </Card>
 
-            <Card className="hover:border-primary/50 transition-colors cursor-pointer group">
+            <Card
+              className="hover:border-primary/50 transition-colors cursor-pointer group"
+              onClick={() => setResourceModal("api")}
+            >
               <CardHeader>
                 <div className="p-2 w-fit rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 mb-2">
                   <FileText className="h-6 w-6" />
@@ -174,7 +224,16 @@ export function HelpSupport({ onLogout, setActiveModule }: HelpSupportProps) {
                 </CardDescription>
               </CardHeader>
               <CardFooter>
-                <Button variant="link" className="px-0">View API Docs <ChevronRight className="h-4 w-4 ml-1" /></Button>
+                <Button
+                  variant="link"
+                  className="px-0"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setResourceModal("api")
+                  }}
+                >
+                  View API Docs <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
               </CardFooter>
             </Card>
           </div>
@@ -184,14 +243,18 @@ export function HelpSupport({ onLogout, setActiveModule }: HelpSupportProps) {
             <div className="lg:col-span-2 space-y-6">
               <h3 className="text-xl font-semibold">Frequently Asked Questions</h3>
               <Accordion type="single" collapsible className="w-full">
-                {faqs.map((faq, index) => (
-                  <AccordionItem key={index} value={`item-${index}`}>
-                    <AccordionTrigger>{faq.question}</AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground">
-                      {faq.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
+                {filteredFaqs.length > 0 ? (
+                  filteredFaqs.map((faq, index) => (
+                    <AccordionItem key={index} value={`item-${index}`}>
+                      <AccordionTrigger>{faq.question}</AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground">{faq.answer}</AccordionContent>
+                    </AccordionItem>
+                  ))
+                ) : (
+                  <div className="p-4 rounded-lg bg-muted text-sm text-muted-foreground">
+                    No FAQs match your search.
+                  </div>
+                )}
               </Accordion>
             </div>
 
@@ -206,7 +269,12 @@ export function HelpSupport({ onLogout, setActiveModule }: HelpSupportProps) {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="subject">Subject</Label>
-                    <Input id="subject" placeholder="What can we help with?" />
+                    <Input
+                      id="subject"
+                      placeholder="What can we help with?"
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="message">Message</Label>
@@ -214,11 +282,24 @@ export function HelpSupport({ onLogout, setActiveModule }: HelpSupportProps) {
                       id="message"
                       placeholder="Describe your issue in detail..."
                       className="min-h-[120px]"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
                     />
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full">
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      if (!subject.trim() || !message.trim()) {
+                        toast.error("Please enter a subject and message")
+                        return
+                      }
+                      toast.success("Message sent", { description: "Support will respond within 1 business day." })
+                      setSubject("")
+                      setMessage("")
+                    }}
+                  >
                     <Mail className="h-4 w-4 mr-2" />
                     Send Message
                   </Button>
@@ -230,7 +311,17 @@ export function HelpSupport({ onLogout, setActiveModule }: HelpSupportProps) {
                 <div>
                   <h4 className="font-medium">Live Chat</h4>
                   <p className="text-sm text-muted-foreground mb-2">Available Mon-Fri, 9am - 5pm EST</p>
-                  <Button variant="outline" size="sm" className="h-8">Start Chat</Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8"
+                    onClick={() => {
+                      setChatOpen(true)
+                      toast.success("Connecting to chat", { description: "A support engineer will join shortly." })
+                    }}
+                  >
+                    Start Chat
+                  </Button>
                 </div>
               </div>
             </div>
@@ -239,6 +330,184 @@ export function HelpSupport({ onLogout, setActiveModule }: HelpSupportProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Resource Modal */}
+      <Dialog open={resourceModal !== null} onOpenChange={(open) => !open && setResourceModal(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {resourceModal === "docs"
+                ? "Documentation"
+                : resourceModal === "videos"
+                  ? "Video Tutorials"
+                  : "API Reference"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {resourceModal === "docs" && (
+              <div className="space-y-2">
+                {[
+                  { title: "AI Estimator — Upload & Parsing", desc: "Sheets, detection, and confidence workflow." },
+                  { title: "Draft Estimate — CSI Table Editing", desc: "Inline edits, splits, and category rollups." },
+                  { title: "Human Review — QA Checklist", desc: "Cost code mapping and final approval." },
+                ].map((item) => (
+                  <button
+                    key={item.title}
+                    className="w-full text-left p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                    onClick={() => toast.success("Opened guide", { description: item.title })}
+                  >
+                    <p className="text-sm font-medium">{item.title}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {resourceModal === "videos" && (
+              <div className="space-y-2">
+                {[
+                  { title: "Estimating QA Best Practices", length: "7:12" },
+                  { title: "Subcontractor Matching — Interpreting Scores", length: "5:48" },
+                  { title: "Zoning Review — Flags & Checklist Export", length: "6:05" },
+                ].map((item) => (
+                  <button
+                    key={item.title}
+                    className="w-full text-left p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                    onClick={() => toast.success("Playing tutorial", { description: `${item.title} • ${item.length}` })}
+                  >
+                    <p className="text-sm font-medium">{item.title}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{item.length}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {resourceModal === "api" && (
+              <div className="space-y-2">
+                {[
+                  { method: "POST", path: "/api/estimates/draft", desc: "Generate a draft estimate." },
+                  { method: "GET", path: "/api/subs/recommendations", desc: "Fetch recommended subcontractors." },
+                  { method: "POST", path: "/api/zoning/analyze", desc: "Analyze zoning documents." },
+                ].map((item) => (
+                  <button
+                    key={item.path}
+                    className="w-full text-left p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                    onClick={() => toast.success("Copied endpoint", { description: `${item.method} ${item.path}` })}
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">{item.path}</p>
+                      <span className="text-xs text-muted-foreground">{item.method}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResourceModal(null)}>
+              Close
+            </Button>
+            <Button
+              className="bg-bannett-navy hover:bg-bannett-navy/90"
+              onClick={() => {
+                toast.success("Opened resource center", { description: "Launching in-app resource center." })
+                setResourceModal(null)
+              }}
+            >
+              Open Resource Center
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Live Chat Modal */}
+      <Dialog open={chatOpen} onOpenChange={setChatOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Live Chat</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="h-64 border rounded-lg p-3 overflow-auto bg-muted/30 space-y-2">
+              {chatMessages.map((m) => (
+                <div key={m.id} className={m.from === "user" ? "text-right" : "text-left"}>
+                  <div
+                    className={
+                      m.from === "user"
+                        ? "inline-block max-w-[85%] rounded-lg bg-bannett-navy text-primary-foreground px-3 py-2 text-sm"
+                        : "inline-block max-w-[85%] rounded-lg bg-background border px-3 py-2 text-sm"
+                    }
+                  >
+                    {m.text}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-1">{m.time}</div>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Input
+                value={chatDraft}
+                onChange={(e) => setChatDraft(e.target.value)}
+                placeholder="Type your message…"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault()
+                    const text = chatDraft.trim()
+                    if (!text) return
+                    const time = new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+                    const id = Date.now()
+                    setChatMessages((prev) => [...prev, { id, from: "user", text, time }])
+                    setChatDraft("")
+                    setTimeout(() => {
+                      const t2 = new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+                      setChatMessages((prev) => [
+                        ...prev,
+                        {
+                          id: id + 1,
+                          from: "support",
+                          text: "Thanks — which project and module are you working in? If possible, include the sheet ID or trade package.",
+                          time: t2,
+                        },
+                      ])
+                    }, 900)
+                  }
+                }}
+              />
+              <Button
+                onClick={() => {
+                  const text = chatDraft.trim()
+                  if (!text) return
+                  const time = new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+                  const id = Date.now()
+                  setChatMessages((prev) => [...prev, { id, from: "user", text, time }])
+                  setChatDraft("")
+                  setTimeout(() => {
+                    const t2 = new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+                    setChatMessages((prev) => [
+                      ...prev,
+                      {
+                        id: id + 1,
+                        from: "support",
+                        text: "Got it. I can help — can you confirm whether this is a new estimate or a revision?",
+                        time: t2,
+                      },
+                    ])
+                  }, 900)
+                }}
+                disabled={!chatDraft.trim()}
+                className="bg-bannett-navy hover:bg-bannett-navy/90"
+              >
+                Send
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setChatOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

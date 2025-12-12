@@ -161,9 +161,14 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
   }
 
   const toggleSubSelection = (id: number) => {
-    setSelectedSubs((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : prev.length < 3 ? [...prev, id] : prev,
-    )
+    setSelectedSubs((prev) => {
+      if (prev.includes(id)) return prev.filter((s) => s !== id)
+      if (prev.length >= 3) {
+        toast.error("Selection limit reached", { description: "Select up to 3 subcontractors to push to Procore." })
+        return prev
+      }
+      return [...prev, id]
+    })
   }
 
   const pushToProcore = () => {
@@ -512,15 +517,43 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
 
                   {/* Contact Info */}
                   <div className="flex gap-4">
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        const phone = "(503) 555-0123"
+                        try {
+                          await navigator.clipboard.writeText(phone)
+                          toast.success("Phone copied", { description: phone })
+                        } catch {
+                          toast.success("Phone", { description: phone })
+                        }
+                      }}
+                    >
                       <Phone className="w-4 h-4 mr-2" />
                       (503) 555-0123
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        toast.success("Contact draft created", {
+                          description: `Prepared outreach message for ${reasoningModal.name}.`,
+                        })
+                      }}
+                    >
                       <Mail className="w-4 h-4 mr-2" />
                       Contact
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        toast.success("Opening in Procore", {
+                          description: `Launching ${reasoningModal.name} in Directory.`,
+                        })
+                      }
+                    >
                       <ExternalLink className="w-4 h-4 mr-2" />
                       View in Procore
                     </Button>

@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server"
 
-export async function GET() {
-  const params = new URLSearchParams({
-    client_id: process.env.PROCORE_CLIENT_ID ?? "",
-    response_type: "code",
-    redirect_uri: process.env.PROCORE_REDIRECT_URI ?? "",
-  })
+export async function GET(req: Request) {
+  const url = new URL(req.url)
+  const callbackUrl = new URL("/api/procore/callback", url)
 
-  const url = `${process.env.PROCORE_OAUTH_URL}/oauth/authorize?${params.toString()}`
-  return NextResponse.redirect(url)
+  // Mock OAuth: redirect immediately with a fake code.
+  callbackUrl.searchParams.set("code", "mock_oauth_code")
+
+  return NextResponse.redirect(callbackUrl)
 }

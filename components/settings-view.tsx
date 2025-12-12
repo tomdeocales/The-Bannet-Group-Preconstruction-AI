@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { toast } from "sonner"
 import type { ModuleType } from "@/app/page"
 
 interface SettingsViewProps {
@@ -26,13 +28,21 @@ interface SettingsViewProps {
   setActiveModule?: (module: ModuleType) => void
 }
 
-export function SettingsView({ onLogout }: SettingsViewProps) {
+export function SettingsView({ onLogout, setActiveModule }: SettingsViewProps) {
   const [loading, setLoading] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [passwordUpdating, setPasswordUpdating] = useState(false)
+  const [outlookConnected, setOutlookConnected] = useState(false)
+  const [outlookConnectOpen, setOutlookConnectOpen] = useState(false)
+  const [outlookConnecting, setOutlookConnecting] = useState(false)
+  const [billingOpen, setBillingOpen] = useState(false)
 
   const handleSave = () => {
     setLoading(true)
     setTimeout(() => {
       setLoading(false)
+      toast.success("Settings saved", { description: "Your profile changes have been updated." })
     }, 1000)
   }
 
@@ -161,15 +171,43 @@ export function SettingsView({ onLogout }: SettingsViewProps) {
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="current">Current Password</Label>
-                      <Input id="current" type="password" />
+                      <Input
+                        id="current"
+                        type="password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="new">New Password</Label>
-                      <Input id="new" type="password" />
+                      <Input
+                        id="new"
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                      />
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button variant="outline">Update Password</Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        if (!currentPassword.trim() || !newPassword.trim()) {
+                          toast.error("Enter your current and new password")
+                          return
+                        }
+                        setPasswordUpdating(true)
+                        setTimeout(() => {
+                          setPasswordUpdating(false)
+                          setCurrentPassword("")
+                          setNewPassword("")
+                          toast.success("Password updated", { description: "Your password has been changed successfully." })
+                        }, 1200)
+                      }}
+                      disabled={passwordUpdating}
+                    >
+                      {passwordUpdating ? "Updating..." : "Update Password"}
+                    </Button>
                   </CardFooter>
                 </Card>
               </TabsContent>
@@ -246,9 +284,15 @@ export function SettingsView({ onLogout }: SettingsViewProps) {
                           <p className="text-sm text-muted-foreground">Sync calendar and contacts.</p>
                         </div>
                       </div>
-                      <Button variant="outline" size="sm">
-                        Connect
-                      </Button>
+                      {outlookConnected ? (
+                        <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100">
+                          Connected
+                        </Badge>
+                      ) : (
+                        <Button variant="outline" size="sm" onClick={() => setOutlookConnectOpen(true)}>
+                          Connect
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -333,7 +377,9 @@ export function SettingsView({ onLogout }: SettingsViewProps) {
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button variant="outline">Manage Subscription</Button>
+                    <Button variant="outline" onClick={() => setBillingOpen(true)}>
+                      Manage Subscription
+                    </Button>
                   </CardFooter>
                 </Card>
               </TabsContent>
@@ -341,6 +387,84 @@ export function SettingsView({ onLogout }: SettingsViewProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Outlook Connect Modal */}
+      <Dialog open={outlookConnectOpen} onOpenChange={setOutlookConnectOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Connect Outlook365</DialogTitle>
+            <DialogDescription>
+              Authorize Outlook365 to sync calendars and project contacts into your Preconstruction workflow.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4 text-sm">
+            <div className="p-3 rounded-lg bg-muted/50">
+              <p className="font-medium">Requested permissions</p>
+              <ul className="mt-2 space-y-1 text-muted-foreground list-disc pl-5">
+                <li>Read calendar events</li>
+                <li>Create/update events for bid due dates</li>
+                <li>Read contacts for vendor outreach</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOutlookConnectOpen(false)} disabled={outlookConnecting}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                setOutlookConnecting(true)
+                setTimeout(() => {
+                  setOutlookConnecting(false)
+                  setOutlookConnected(true)
+                  setOutlookConnectOpen(false)
+                  toast.success("Outlook365 connected", { description: "Calendar and contacts sync enabled." })
+                }, 1500)
+              }}
+              disabled={outlookConnecting}
+              className="bg-bannett-navy hover:bg-bannett-navy/90"
+            >
+              {outlookConnecting ? "Authorizing..." : "Authorize"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Billing Modal */}
+      <Dialog open={billingOpen} onOpenChange={setBillingOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Billing & Subscription</DialogTitle>
+            <DialogDescription>Review plan details and manage seats and invoices.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="p-3 rounded-lg bg-muted/50">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Enterprise Plan</span>
+                <Badge>Active</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">$249/user/month • Annual billing</p>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground">
+              Billing portal access is managed by your Bannett Admin. Use the Billing Portal to review invoices, seats,
+              and payment methods.
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBillingOpen(false)}>
+              Close
+            </Button>
+            <Button
+              onClick={() =>
+                toast.success("Billing portal opened", { description: "Launching billing portal." })
+              }
+              className="bg-bannett-navy hover:bg-bannett-navy/90"
+            >
+              Open Billing Portal
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
