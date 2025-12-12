@@ -58,7 +58,7 @@ export function Sidebar({
       {/* Logo */}
       <div className="p-4">
         <div className="flex items-center gap-3">
-          <Image src="/images/image.png" alt="The Bannett Group Logo" width={40} height={40} className="rounded-lg" />
+          <Image src="/images/image.png" alt="The Bannett Group Logo" width={40} height={40} />
           <div>
             <h1 className="font-semibold text-sidebar-foreground text-sm">The Bannett Group</h1>
             <p className="text-xs text-muted-foreground">Preconstruction AI</p>
@@ -79,11 +79,14 @@ export function Sidebar({
             </div>
             <ChevronDown className="w-4 h-4 text-muted-foreground" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
-            {projectsLoading ? (
-              <DropdownMenuItem className="text-muted-foreground">Loading projects…</DropdownMenuItem>
-            ) : (
-              projects.map((project) => (
+	          <DropdownMenuContent
+	            align="start"
+	            className="w-56 max-h-[360px] overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full"
+	          >
+	            {projectsLoading ? (
+	              <DropdownMenuItem className="text-muted-foreground">Loading projects…</DropdownMenuItem>
+	            ) : (
+	              projects.map((project) => (
               <DropdownMenuItem
                 key={project.id}
                 onClick={() => setSelectedProject(project)}

@@ -239,11 +239,11 @@ export function AIEstimator({ selectedProject, onLogout, setActiveModule }: AIEs
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [isPanning, setIsPanning] = useState(false)
   const [panStart, setPanStart] = useState<{ x: number; y: number } | null>(null)
-  const [viewerLayers, setViewerLayers] = useState({
-    detections: true,
-    annotations: true,
-    grid: false,
-  })
+	  const [viewerLayers, setViewerLayers] = useState({
+	    detections: true,
+	    annotations: true,
+	    grid: true,
+	  })
   const [selectedDetection, setSelectedDetection] = useState<Detection | null>(null)
   const [estimates, setEstimates] = useState(estimateData)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
@@ -321,11 +321,11 @@ export function AIEstimator({ selectedProject, onLogout, setActiveModule }: AIEs
     setStep(2)
     setZoom(1)
     setPan({ x: 0, y: 0 })
-    setPanEnabled(false)
-    setIsPanning(false)
-    setPanStart(null)
-    setViewerLayers({ detections: true, annotations: true, grid: false })
-    setSelectedCategory("Walls")
+	    setPanEnabled(false)
+	    setIsPanning(false)
+	    setPanStart(null)
+	    setViewerLayers({ detections: true, annotations: true, grid: true })
+	    setSelectedCategory("Walls")
 
     const interval = setInterval(() => {
       setParsingProgress((prev) => {
@@ -1658,13 +1658,13 @@ export function AIEstimator({ selectedProject, onLogout, setActiveModule }: AIEs
                 setSelectedDetection(null)
                 setZoom(1)
                 setPan({ x: 0, y: 0 })
-                setPanEnabled(false)
-                setIsPanning(false)
-                setPanStart(null)
-                setViewerLayers({ detections: true, annotations: true, grid: false })
-                setEstimates(estimateData)
-                setIsSavingDraft(false)
-                setAddItemOpen(false)
+	                setPanEnabled(false)
+	                setIsPanning(false)
+	                setPanStart(null)
+	                setViewerLayers({ detections: true, annotations: true, grid: true })
+	                setEstimates(estimateData)
+	                setIsSavingDraft(false)
+	                setAddItemOpen(false)
                 setAddItemDraft({ category: "03 - Concrete", description: "", quantity: "", unit: "EA", unitCost: "" })
                 setEditingItem(null)
                 setNotesOpen(null)

@@ -41,7 +41,7 @@ export function Login({ onLogin }: LoginProps) {
     <div className="fixed inset-0 flex items-center justify-center bg-[#fafafa] px-4">
       <div className="max-w-xl w-full flex flex-col items-center gap-8 text-center">
         <div className="h-16 w-16 flex items-center justify-center">
-          <Image src="/images/image.png" alt="The Bannett Group" width={48} height={48} className="rounded-xl" />
+          <Image src="/images/image.png" alt="The Bannett Group" width={48} height={48} />
         </div>
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold text-foreground">Welcome</h1>
