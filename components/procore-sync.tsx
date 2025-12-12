@@ -235,6 +235,17 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
                 </Badge>
               </div>
 
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    window.location.href = "/api/procore/login"
+                  }}
+                >
+                  Connect to Procore
+                </Button>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 rounded-lg bg-muted/50">
                   <div className="flex items-center gap-2 mb-2">
