@@ -20,14 +20,7 @@ import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import type { ModuleType } from "@/app/page"
-
-const projects = [
-  "Riverside Medical Center",
-  "Harbor View Office Complex",
-  "Westfield Shopping Plaza",
-  "Downtown Transit Hub",
-  "Lakeside Residential Tower",
-]
+import type { ProcoreProject } from "@/lib/procore/types"
 
 const navItems = [
   { id: "dashboard" as ModuleType, label: "Dashboard", icon: LayoutDashboard },
@@ -40,8 +33,11 @@ const navItems = [
 interface SidebarProps {
   activeModule: ModuleType
   setActiveModule: (module: ModuleType) => void
-  selectedProject: string
-  setSelectedProject: (project: string) => void
+  selectedProject: ProcoreProject
+  setSelectedProject: (project: ProcoreProject) => void
+  projects: ProcoreProject[]
+  projectsLoading?: boolean
+  procoreConnected?: boolean
   onLogout?: () => void
 }
 
@@ -50,6 +46,9 @@ export function Sidebar({
   setActiveModule,
   selectedProject,
   setSelectedProject,
+  projects,
+  projectsLoading,
+  procoreConnected = true,
   onLogout,
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("")
@@ -75,15 +74,18 @@ export function Sidebar({
             <div className="flex items-center gap-2">
               <Building2 className="w-4 h-4 text-bannett-blue" />
               <span className="text-sm font-medium text-sidebar-foreground truncate max-w-[140px]">
-                {selectedProject}
+                {selectedProject.display_name ?? selectedProject.name}
               </span>
             </div>
             <ChevronDown className="w-4 h-4 text-muted-foreground" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
-            {projects.map((project) => (
+            {projectsLoading ? (
+              <DropdownMenuItem className="text-muted-foreground">Loading projects…</DropdownMenuItem>
+            ) : (
+              projects.map((project) => (
               <DropdownMenuItem
-                key={project}
+                key={project.id}
                 onClick={() => setSelectedProject(project)}
                 className={cn(
                   "cursor-pointer flex items-center justify-between text-black focus:bg-sidebar-accent/80 focus:text-black",
@@ -91,11 +93,12 @@ export function Sidebar({
               >
                 <div className="flex items-center">
                   <Building2 className="w-4 h-4 mr-2" />
-                  {project}
+                  {project.display_name ?? project.name}
                 </div>
-                {project === selectedProject && <Check className="w-4 h-4 text-black" />}
+                {project.id === selectedProject.id && <Check className="w-4 h-4 text-black" />}
               </DropdownMenuItem>
-            ))}
+              ))
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -169,8 +172,12 @@ export function Sidebar({
       <div className="mx-4 h-[1px] bg-sidebar-border" />
       <div className="p-4">
         <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-sidebar-accent text-center">
-          <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-          <span className="text-xs text-muted-foreground">Connected to Procore</span>
+          <div
+            className={cn("w-2 h-2 rounded-full", procoreConnected ? "bg-success animate-pulse" : "bg-destructive")}
+          />
+          <span className="text-xs text-muted-foreground">
+            {procoreConnected ? "Connected to Procore" : "Not connected to Procore"}
+          </span>
         </div>
         <button
           onClick={onLogout}

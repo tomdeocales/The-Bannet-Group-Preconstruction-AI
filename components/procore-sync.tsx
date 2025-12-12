@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   RefreshCw,
   Check,
@@ -37,9 +37,11 @@ import {
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import type { ModuleType } from "@/app/page"
+import { getSyncLogs } from "@/lib/procore/client"
+import type { ProcoreProject, SyncLogEntry } from "@/lib/procore/types"
 
 interface ProcoreSyncProps {
-  selectedProject: string
+  selectedProject: ProcoreProject
   onLogout?: () => void
   setActiveModule?: (module: ModuleType) => void
 }
@@ -54,50 +56,14 @@ const fieldMappings = [
   { aiField: "Zoning Notes", procoreField: "Project Notes", status: "unmapped" },
 ]
 
-const syncLogs = [
-  {
-    id: 1,
-    action: "Estimate pushed to Planroom",
-    timestamp: "Dec 9, 2025 at 2:34 PM",
-    status: "success",
-    details: "Phase 1 Foundation estimate ($1,245,680) synced to Budget module",
-  },
-  {
-    id: 2,
-    action: "3 subcontractors added to Bid Package",
-    timestamp: "Dec 9, 2025 at 11:22 AM",
-    status: "success",
-    details: "Summit Mechanical, ElectroPro Commercial, Cascade Plumbing added to MEP package",
-  },
-  {
-    id: 3,
-    action: "Zoning summary exported to Documents",
-    timestamp: "Dec 8, 2025 at 4:15 PM",
-    status: "success",
-    details: "Zoning review PDF uploaded to Project Documents > Preconstruction",
-  },
-  {
-    id: 4,
-    action: "Drawing set sync attempted",
-    timestamp: "Dec 8, 2025 at 10:45 AM",
-    status: "warning",
-    details: "12 sheets uploaded, 2 sheets failed validation (file size exceeded)",
-  },
-  {
-    id: 5,
-    action: "Cost code mapping updated",
-    timestamp: "Dec 7, 2025 at 3:30 PM",
-    status: "success",
-    details: "4 new cost code mappings added for electrical division",
-  },
-  {
-    id: 6,
-    action: "Subcontractor directory sync",
-    timestamp: "Dec 7, 2025 at 9:00 AM",
-    status: "error",
-    details: "Failed to sync 1 vendor - duplicate entry detected",
-  },
-]
+const syncTypeLabel: Record<SyncLogEntry["type"], string> = {
+  estimate_export: "Estimate export",
+  zoning_export: "Zoning export",
+  bidder_push: "Bidder push",
+  auth: "Authentication",
+  directory_sync: "Directory sync",
+  documents_upload: "Documents upload",
+}
 
 export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: ProcoreSyncProps) {
   const [isConnected, setIsConnected] = useState(true)
@@ -108,8 +74,9 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
   const [infoModalOpen, setInfoModalOpen] = useState(false)
   const [connectModalOpen, setConnectModalOpen] = useState(false)
   const [disconnectModalOpen, setDisconnectModalOpen] = useState(false)
-  const [lastSyncAt, setLastSyncAt] = useState("Dec 9, 2025 at 2:34 PM")
-  const [logs, setLogs] = useState(syncLogs)
+  const [lastSyncAt, setLastSyncAt] = useState("—")
+  const [logs, setLogs] = useState<SyncLogEntry[]>([])
+  const [logsLoading, setLogsLoading] = useState(false)
 
   const formatTimestamp = (date: Date) => {
     const datePart = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
@@ -117,23 +84,57 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
     return `${datePart} at ${timePart}`
   }
 
-  const appendLog = (log: Omit<(typeof syncLogs)[0], "id">) => {
-    setLogs((prev) => [{ id: Math.max(0, ...prev.map((l) => l.id)) + 1, ...log }, ...prev])
+  const projectKey = selectedProject.display_name ?? selectedProject.name
+
+  const refreshLogs = useMemo(() => {
+    return async () => {
+      setLogsLoading(true)
+      try {
+        const res = await getSyncLogs(selectedProject.id, { page: 1, per_page: 20 })
+        setLogs(res.items)
+        setLastSyncAt(res.last_sync_at ? formatTimestamp(new Date(res.last_sync_at)) : "—")
+        setIsConnected(true)
+      } catch {
+        setLogs([])
+        setLastSyncAt("—")
+        setIsConnected(false)
+      } finally {
+        setLogsLoading(false)
+      }
+    }
+  }, [selectedProject.id])
+
+  useEffect(() => {
+    refreshLogs()
+    setExpandedLog(null)
+  }, [refreshLogs, selectedProject.id])
+
+  const appendMockLog = async (entry: Pick<SyncLogEntry, "type" | "status" | "message">) => {
+    try {
+      await fetch(`/api/procore/projects/${selectedProject.id}/sync-logs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(entry),
+        credentials: "include",
+      })
+    } catch {
+      // ignore
+    }
   }
 
   const handleReauthorize = () => {
     setIsSyncing(true)
-    setTimeout(() => {
+    setTimeout(async () => {
       setIsSyncing(false)
       setIsConnected(true)
       toast.success("Connection reauthorized successfully")
-      appendLog({
-        action: "Connection reauthorized",
-        timestamp: formatTimestamp(new Date()),
-        status: "success",
-        details: "OAuth session refreshed and permissions verified.",
+      await appendMockLog({
+        type: "auth",
+        status: "info",
+        message: `Reauthorized Procore connection. (${selectedProject.project_number ?? projectKey})`,
       })
-    }, 2000)
+      refreshLogs()
+    }, 1400)
   }
 
   const handleSync = () => {
@@ -145,16 +146,14 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
     setIsSyncing(true)
     setTimeout(() => {
       setIsSyncing(false)
-      setLastSyncAt(formatTimestamp(new Date()))
       toast.success("Sync completed successfully", {
         description: "All data has been synchronized with Procore.",
       })
-      appendLog({
-        action: "Manual sync completed",
-        timestamp: formatTimestamp(new Date()),
+      appendMockLog({
+        type: "estimate_export",
         status: "success",
-        details: "Estimates, subcontractor selections, and zoning artifacts synced to Procore.",
-      })
+        message: `Manual sync completed for ${projectKey}.`,
+      }).finally(() => refreshLogs())
     }, 3000)
   }
 
@@ -169,7 +168,7 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
       <div className="flex items-center justify-between px-6">
         <div>
           <h1 className="text-xl md:text-2xl font-semibold text-foreground">Procore Sync</h1>
-          <p className="text-sm text-muted-foreground">{selectedProject}</p>
+          <p className="text-sm text-muted-foreground">{projectKey}</p>
         </div>
         <div className="flex items-center gap-3">
           <DropdownMenu>
@@ -371,12 +370,11 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
                       setIsConnected(true)
                       setConnectModalOpen(false)
                       toast.success("Connected to Procore", { description: "Connection established and verified." })
-                      appendLog({
-                        action: "Connection established",
-                        timestamp: formatTimestamp(new Date()),
-                        status: "success",
-                        details: "Procore connection authorized and ready for syncing.",
-                      })
+                      appendMockLog({
+                        type: "auth",
+                        status: "info",
+                        message: `Connection established. (${selectedProject.project_number ?? projectKey})`,
+                      }).finally(() => refreshLogs())
                     }, 1500)
                   }}
                   disabled={isSyncing}
@@ -415,11 +413,10 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
                     setDisconnectModalOpen(false)
                     setIsConnected(false)
                     toast.success("Disconnected", { description: "Syncing has been paused." })
-                    appendLog({
-                      action: "Connection disconnected",
-                      timestamp: formatTimestamp(new Date()),
+                    appendMockLog({
+                      type: "auth",
                       status: "warning",
-                      details: "User disconnected the Procore connection. Sync operations paused.",
+                      message: `Connection disconnected by user. (${selectedProject.project_number ?? projectKey})`,
                     })
                   }}
                   disabled={isSyncing}
@@ -590,48 +587,72 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
         <TabsContent value="logs" className="space-y-6">
           <Card className="bg-card">
             <CardHeader>
-              <CardTitle className="text-card-foreground">Sync Logs</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-card-foreground">Sync Logs</CardTitle>
+                <Button variant="ghost" size="icon" onClick={refreshLogs} disabled={logsLoading}>
+                  <RefreshCw className={cn("w-4 h-4", logsLoading && "animate-spin")} />
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {logs.map((log) => (
-                  <div
-                    key={log.id}
-                    className={cn(
-                      "p-4 rounded-lg cursor-pointer transition-colors",
-                      log.status === "success"
-                        ? "bg-muted/50 hover:bg-muted"
-                        : log.status === "warning"
-                          ? "bg-warning/10 hover:bg-warning/20"
-                          : "bg-destructive/10 hover:bg-destructive/20",
-                    )}
-                    onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {log.status === "success" && <Check className="w-5 h-5 text-success" />}
-                        {log.status === "warning" && <AlertCircle className="w-5 h-5 text-warning" />}
-                        {log.status === "error" && <AlertCircle className="w-5 h-5 text-destructive" />}
-                        <div>
-                          <p className="font-medium text-card-foreground">{log.action}</p>
-                          <p className="text-sm text-muted-foreground">{log.timestamp}</p>
-                        </div>
-                      </div>
-                      <ChevronDown
-                        className={cn(
-                          "w-4 h-4 text-muted-foreground transition-transform",
-                          expandedLog === log.id && "rotate-180",
-                        )}
-                      />
-                    </div>
-
-                    {expandedLog === log.id && (
-                      <div className="mt-3 pt-3 border-t border-border">
-                        <p className="text-sm text-muted-foreground">{log.details}</p>
-                      </div>
-                    )}
+                {logsLoading ? (
+                  <div className="p-4 rounded-lg bg-muted/50 flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Loading sync logs…
                   </div>
-                ))}
+                ) : logs.length === 0 ? (
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <p className="text-sm text-muted-foreground">
+                      {isConnected ? "No sync events logged yet for this project." : "Connect to Procore to view sync logs."}
+                    </p>
+                  </div>
+                ) : (
+                  logs.map((log) => (
+                    <div
+                      key={log.id}
+                      className={cn(
+                        "p-4 rounded-lg cursor-pointer transition-colors",
+                        log.status === "success"
+                          ? "bg-muted/50 hover:bg-muted"
+                          : log.status === "warning"
+                            ? "bg-warning/10 hover:bg-warning/20"
+                            : log.status === "error"
+                              ? "bg-destructive/10 hover:bg-destructive/20"
+                              : "bg-muted/50 hover:bg-muted",
+                      )}
+                      onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {log.status === "success" && <Check className="w-5 h-5 text-success" />}
+                          {log.status === "warning" && <AlertCircle className="w-5 h-5 text-warning" />}
+                          {log.status === "error" && <AlertCircle className="w-5 h-5 text-destructive" />}
+                          {log.status === "info" && <Info className="w-5 h-5 text-muted-foreground" />}
+                          <div>
+                            <p className="font-medium text-card-foreground">{log.message}</p>
+                            <p className="text-sm text-muted-foreground">{formatTimestamp(new Date(log.created_at))}</p>
+                          </div>
+                        </div>
+                        <ChevronDown
+                          className={cn(
+                            "w-4 h-4 text-muted-foreground transition-transform",
+                            expandedLog === log.id && "rotate-180",
+                          )}
+                        />
+                      </div>
+
+                      {expandedLog === log.id && (
+                        <div className="mt-3 pt-3 border-t border-border space-y-1">
+                          <p className="text-sm text-muted-foreground">
+                            Type: {syncTypeLabel[log.type]} • Status: {log.status}
+                          </p>
+                          <p className="text-sm text-muted-foreground">Project: {projectKey}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>

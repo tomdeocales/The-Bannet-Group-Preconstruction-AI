@@ -1,40 +1,44 @@
 import { NextRequest, NextResponse } from "next/server"
+import { procoreRequest } from "@/lib/procoreClient"
+import { listProjectDocuments } from "@/lib/procore/mockStore"
+import type { ProcoreDocumentEntry, ProcoreView } from "@/lib/procore/types"
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
-  const token = _req.cookies.get("procore_access_token")?.value
+  const procoreMode = process.env.PROCORE_MODE ?? "mock"
+  const token = req.cookies.get("procore_access_token")?.value
 
-  if (!token) {
-    return NextResponse.json(
-      { error: "Not connected to Procore" },
-      { status: 401 }
-    )
+  const { projectId } = await params
+  const project_id = Number.parseInt(projectId, 10)
+
+  const url = new URL(req.url)
+  const page = Number.parseInt(url.searchParams.get("page") ?? "1", 10) || 1
+  const per_page = Number.parseInt(url.searchParams.get("per_page") ?? "10", 10) || 10
+  const view = (url.searchParams.get("view") as ProcoreView | null) ?? "normal"
+  const sort = url.searchParams.get("sort") ?? undefined
+  const search = url.searchParams.get("filters[search]") ?? undefined
+  const folder_id = url.searchParams.get("filters[folder_id]") ?? undefined
+
+  if (procoreMode === "mock") {
+    const data = listProjectDocuments(project_id, { page, per_page, view, sort, filters: { search, folder_id } })
+    return NextResponse.json({ project_id, ...data })
   }
 
-  const { projectId } = await params   // ✅ unwrap params
+  if (!token) {
+    return NextResponse.json({ error: "Not connected to Procore" }, { status: 401 })
+  }
 
-  const documents = [
-    {
-      id: 44001,
-      name: "Zoning_Summary_Executive.pdf",
-      path: "Project Documents > Preconstruction > Zoning",
-      updated_at: "2025-12-09T16:15:00Z",
-    },
-    {
-      id: 44002,
-      name: "Estimate_Draft_Phase_1_Foundation.xlsx",
-      path: "Project Documents > Preconstruction > Estimates",
-      updated_at: "2025-12-09T14:34:00Z",
-    },
-    {
-      id: 44003,
-      name: "Drawings_Set_A01-A12.pdf",
-      path: "Project Documents > Drawings",
-      updated_at: "2025-12-08T10:45:00Z",
-    },
-  ]
+  const qs = new URLSearchParams()
+  qs.set("page", String(page))
+  qs.set("per_page", String(per_page))
+  qs.set("view", view === "minimal" ? "normal" : view)
+  if (sort) qs.set("sort", sort)
+  if (search) qs.set("filters[search]", search)
+  if (folder_id) qs.set("filters[folder_id]", folder_id)
 
-  return NextResponse.json({ mock: true, projectId, documents })
+  const items = (await procoreRequest(`/rest/v2.0/projects/${project_id}/documents?${qs.toString()}`, token)) as ProcoreDocumentEntry[]
+  const total_pages = items.length < per_page ? page : page + 1
+  return NextResponse.json({ project_id, items, meta: { page, per_page, total: items.length, total_pages } })
 }

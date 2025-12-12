@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   Building2,
   MapPin,
@@ -41,107 +41,201 @@ import {
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import type { ModuleType } from "@/app/page"
+import { getBidPackages, getVendors, postAddBidders } from "@/lib/procore/client"
+import type { ProcoreBidPackage, ProcoreProject, ProcoreVendor } from "@/lib/procore/types"
 
 interface SubcontractorMatchingProps {
-  selectedProject: string
+  selectedProject: ProcoreProject
   onLogout?: () => void
   setActiveModule?: (module: ModuleType) => void
 }
 
 type Step = 1 | 2 | 3
 
-const subcontractors = [
-  {
-    id: 1,
-    name: "Summit Mechanical Solutions",
-    trade: "HVAC",
-    distance: "12 miles",
-    performance: 94,
-    capacity: "High",
-    pricing: "Mid-range",
-    availability: "Available",
-    certifications: ["OSHA 30", "EPA 608", "NATE Certified"],
-    pastProjects: ["City Hospital HVAC Retrofit", "Tech Park Building C", "Riverside Commons"],
-    strengths: [
-      "Excellent track record with healthcare facilities",
-      "Strong safety record",
-      "Responsive communication",
-    ],
-    weaknesses: ["Higher than average change order rate", "Limited night shift availability"],
-    riskFactors: ["Current workload at 75% capacity"],
-    confidence: 94,
-  },
-  {
-    id: 2,
-    name: "ElectroPro Commercial",
-    trade: "Electrical",
-    distance: "8 miles",
-    performance: 91,
-    capacity: "Medium",
-    pricing: "Competitive",
-    availability: "Available",
-    certifications: ["OSHA 30", "Master Electrician", "LEED AP"],
-    pastProjects: ["Downtown Office Tower", "Retail Plaza Phase 2", "Industrial Park Expansion"],
-    strengths: ["Fast turnaround on RFIs", "Excellent quality control", "Strong BIM capabilities"],
-    weaknesses: ["Premium pricing for expedited work"],
-    riskFactors: ["Key project manager recently departed"],
-    confidence: 91,
-  },
-  {
-    id: 3,
-    name: "Cascade Plumbing & Fire",
-    trade: "Plumbing",
-    distance: "15 miles",
-    performance: 88,
-    capacity: "High",
-    pricing: "Competitive",
-    availability: "Limited",
-    certifications: ["OSHA 30", "Master Plumber", "Backflow Certified"],
-    pastProjects: ["Medical Center West Wing", "Luxury Condos Phase 1", "University Science Building"],
-    strengths: ["Healthcare experience", "24/7 emergency response", "In-house fabrication"],
-    weaknesses: ["Limited availability until Q2", "Higher mobilization costs"],
-    riskFactors: ["Currently managing 5 active projects"],
-    confidence: 88,
-  },
-  {
-    id: 4,
-    name: "Atlas Structural Steel",
-    trade: "Steel",
-    distance: "22 miles",
-    performance: 92,
-    capacity: "Medium",
-    pricing: "Premium",
-    availability: "Available",
-    certifications: ["AISC Certified", "OSHA 30", "AWS D1.1"],
-    pastProjects: ["Airport Terminal Expansion", "Sports Arena", "High-Rise Tower A"],
-    strengths: ["Complex structural experience", "Excellent detailing", "On-time delivery record"],
-    weaknesses: ["Premium pricing", "Long lead times for custom work"],
-    riskFactors: ["Supply chain dependencies"],
-    confidence: 92,
-  },
-  {
-    id: 5,
-    name: "Foundation Masters Inc",
-    trade: "Concrete",
-    distance: "5 miles",
-    performance: 89,
-    capacity: "High",
-    pricing: "Mid-range",
-    availability: "Available",
-    certifications: ["ACI Certified", "OSHA 30", "Post-Tension Certified"],
-    pastProjects: ["Parking Structure D", "Warehouse District", "Mixed-Use Development"],
-    strengths: ["Local presence", "Quick mobilization", "Reliable scheduling"],
-    weaknesses: ["Limited decorative concrete experience"],
-    riskFactors: ["Seasonal workforce fluctuation"],
-    confidence: 89,
-  },
-]
+type SortMode = "Recommended" | "Distance" | "Capacity" | "Price"
+
+type VendorRecommendation = {
+  id: number
+  name: string
+  trade: string
+  city?: string
+  state_code?: string
+  business_phone?: string
+  updated_at?: string
+  distanceMiles: number
+  distance: string
+  performance: number
+  capacity: "Low" | "Medium" | "High"
+  pricing: "Competitive" | "Mid-range" | "Premium"
+  availability: "Available" | "Limited"
+  certifications: string[]
+  pastProjects: string[]
+  strengths: string[]
+  weaknesses: string[]
+  riskFactors: string[]
+  tradeFit: string
+  availabilityWindow: string
+  confidence: number
+}
+
+const mulberry32 = (seed: number) => {
+  let t = seed >>> 0
+  return () => {
+    t += 0x6d2b79f5
+    let r = Math.imul(t ^ (t >>> 15), 1 | t)
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r)
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n))
+
+const formatShortDate = (iso?: string) => {
+  if (!iso) return "—"
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return "—"
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+}
+
+const capacityScore = (capacity: VendorRecommendation["capacity"]) => {
+  if (capacity === "High") return 3
+  if (capacity === "Medium") return 2
+  return 1
+}
+
+const pricingScore = (pricing: VendorRecommendation["pricing"]) => {
+  if (pricing === "Competitive") return 3
+  if (pricing === "Mid-range") return 2
+  return 1
+}
+
+const makeRecommendation = (vendor: ProcoreVendor, projectId: number, requirements: string): VendorRecommendation => {
+  const rng = mulberry32(vendor.id ^ projectId)
+
+  const distanceMiles = 3 + Math.floor(rng() * 85)
+  const performance = 82 + Math.floor(rng() * 17)
+
+  const capacityRoll = rng()
+  const capacity: VendorRecommendation["capacity"] = capacityRoll > 0.72 ? "High" : capacityRoll > 0.38 ? "Medium" : "Low"
+
+  const pricingRoll = rng()
+  const pricing: VendorRecommendation["pricing"] = pricingRoll > 0.74 ? "Premium" : pricingRoll > 0.38 ? "Mid-range" : "Competitive"
+
+  const availabilityRoll = rng()
+  const availability: VendorRecommendation["availability"] = availabilityRoll > 0.78 ? "Limited" : "Available"
+
+  const startWeeks = availability === "Available" ? Math.floor(rng() * 3) : 4 + Math.floor(rng() * 6)
+  const availabilityWindow =
+    startWeeks === 0 ? "Available now" : availability === "Available" ? `Available in ${startWeeks}–${startWeeks + 2} weeks` : `Lead time ${startWeeks}–${startWeeks + 4} weeks`
+
+  const trade = vendor.trade_name ?? "Trade"
+
+  const certByTrade: Record<string, string[]> = {
+    Electrical: ["OSHA 30", "Master Electrician", "NFPA 70E"],
+    HVAC: ["OSHA 30", "EPA 608", "NATE Certified"],
+    Plumbing: ["OSHA 30", "Master Plumber", "Backflow Certified"],
+    "Fire Protection": ["OSHA 30", "NICET II", "NFPA 13"],
+    Steel: ["AISC Certified", "OSHA 30", "AWS D1.1"],
+    Concrete: ["ACI Certified", "OSHA 30", "Post-Tension Certified"],
+    Drywall: ["OSHA 30", "STC Assemblies Experience", "Union/Non-Union Capable"],
+    Roofing: ["OSHA 30", "Manufacturer Certified", "Fall Protection"],
+    Flooring: ["OSHA 30", "Moisture Mitigation", "Healthcare Flooring"],
+    Glazing: ["OSHA 30", "CW & Storefront Systems", "Swing Stage Certified"],
+    Painting: ["OSHA 30", "Low-VOC Systems", "SSPC Surface Prep"],
+    "Civil/Site": ["OSHA 30", "Erosion Control", "Utility Coordination"],
+    Masonry: ["OSHA 30", "CMU Reinforcement", "Seismic Detailing"],
+    "Doors & Hardware": ["OSHA 30", "Fire Door Assemblies", "ADA/Hardware Sets"],
+    Demolition: ["OSHA 30", "Lead/Asbestos Awareness", "Selective Demo"],
+  }
+
+  const certifications = certByTrade[trade] ?? ["OSHA 30", "Licensed Contractor"]
+
+  const pastWorkPool = [
+    "Tenant Improvement — Class A Office",
+    "Medical Office Buildout",
+    "Retail Shell & Fit-Out",
+    "Hospital Expansion (Phase 2)",
+    "Transit-Oriented Development",
+    "Higher Ed Lab Renovation",
+    "Multifamily Podium Renovation",
+    "Warehouse Conversion",
+  ]
+  const pastProjects = Array.from({ length: 3 }).map(() => pastWorkPool[Math.floor(rng() * pastWorkPool.length)])
+
+  const requirementsText = requirements.toLowerCase()
+  const healthcareFit = requirementsText.includes("health") || requirementsText.includes("hospital") || requirementsText.includes("clinic")
+  const unionFit = requirementsText.includes("union")
+  const leedFit = requirementsText.includes("leed")
+
+  const tradeFitParts = [
+    healthcareFit ? "Healthcare compliance familiarity" : "Strong commercial project fit",
+    unionFit ? "Union coordination experience" : "Flexible staffing model",
+    leedFit ? "LEED submittal experience" : "Responsive submittal turnaround",
+  ]
+  const tradeFit = tradeFitParts.join(" • ")
+
+  const strengths: string[] = []
+  if (performance >= 92) strengths.push("Consistently strong QA/QC and closeout documentation")
+  if (distanceMiles <= 20) strengths.push("Local coverage with quick mobilization")
+  if (capacity === "High") strengths.push("Capacity to support accelerated schedule windows")
+  if (pricing === "Competitive") strengths.push("Typically competitive pricing for base scope")
+
+  const weaknesses: string[] = []
+  if (pricing === "Premium") weaknesses.push("Premium pricing expected for tight turnaround or off-hours work")
+  if (availability === "Limited") weaknesses.push("Schedule lead time may impact award timing")
+  if (capacity === "Low") weaknesses.push("Limited bandwidth for concurrent packages")
+
+  const riskFactors: string[] = []
+  const riskRoll = rng()
+  if (riskRoll > 0.7) riskFactors.push("Current backlog trending above target utilization")
+  if (riskRoll < 0.25) riskFactors.push("Equipment procurement lead times require early lock-in")
+  if (!riskFactors.length) riskFactors.push("No material risk flags detected based on recent activity")
+
+  const distanceFactor = clamp(1 - distanceMiles / 100, 0, 1)
+  const capacityFactor = capacityScore(capacity) / 3
+  const pricingFactor = pricingScore(pricing) / 3
+  const confidence = clamp(
+    Math.round(performance * 0.55 + distanceFactor * 100 * 0.2 + capacityFactor * 100 * 0.15 + pricingFactor * 100 * 0.1),
+    70,
+    98,
+  )
+
+  return {
+    id: vendor.id,
+    name: vendor.name,
+    trade,
+    city: vendor.city,
+    state_code: vendor.state_code,
+    business_phone: vendor.business_phone,
+    updated_at: vendor.updated_at,
+    distanceMiles,
+    distance: `${distanceMiles} miles`,
+    performance,
+    capacity,
+    pricing,
+    availability,
+    certifications,
+    pastProjects,
+    strengths: strengths.length ? strengths : ["Responsive communication and field coordination"],
+    weaknesses: weaknesses.length ? weaknesses : ["No notable weaknesses identified for this scope"],
+    riskFactors,
+    tradeFit,
+    availabilityWindow,
+    confidence,
+  }
+}
 
 export function SubcontractorMatching({ selectedProject, onLogout, setActiveModule }: SubcontractorMatchingProps) {
   const [step, setStep] = useState<Step>(1)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isPushing, setIsPushing] = useState(false)
   const [selectedSubs, setSelectedSubs] = useState<number[]>([])
-  const [reasoningModal, setReasoningModal] = useState<(typeof subcontractors)[0] | null>(null)
+  const [sortMode, setSortMode] = useState<SortMode>("Recommended")
+  const [vendors, setVendors] = useState<ProcoreVendor[]>([])
+  const [bidPackages, setBidPackages] = useState<ProcoreBidPackage[]>([])
+  const [bidPackagesLoading, setBidPackagesLoading] = useState(false)
+  const [selectedBidPackageId, setSelectedBidPackageId] = useState<number | null>(null)
+  const [reasoningModal, setReasoningModal] = useState<VendorRecommendation | null>(null)
   const [notes, setNotes] = useState("")
   const [formData, setFormData] = useState({
     location: "Portland, OR",
@@ -152,12 +246,109 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
     requirements: "Healthcare compliance required",
   })
 
-  const generateRecommendations = () => {
+  useEffect(() => {
+    const location = [selectedProject.city, selectedProject.state_code].filter(Boolean).join(", ") || "Portland, OR"
+    setFormData((prev) => ({ ...prev, location }))
+    setStep(1)
+    setSelectedSubs([])
+    setNotes("")
+    setReasoningModal(null)
+    setSortMode("Recommended")
+    setVendors([])
+  }, [selectedProject.id, selectedProject.city, selectedProject.state_code])
+
+  useEffect(() => {
+    let cancelled = false
+    setBidPackagesLoading(true)
+    getBidPackages(selectedProject.id, { page: 1, per_page: 25, view: "extended" })
+      .then((res) => {
+        if (cancelled) return
+        setBidPackages(res.items)
+        setSelectedBidPackageId(res.items[0]?.id ?? null)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setBidPackages([])
+        setSelectedBidPackageId(null)
+      })
+      .finally(() => {
+        if (cancelled) return
+        setBidPackagesLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [selectedProject.id])
+
+  const tradeSearchToken = (tradeValue: string) => {
+    if (tradeValue === "electrical") return "Electrical"
+    if (tradeValue === "plumbing") return "Plumbing"
+    if (tradeValue === "hvac") return "HVAC"
+    if (tradeValue === "concrete") return "Concrete"
+    if (tradeValue === "steel") return "Steel"
+    return ""
+  }
+
+  const allowedMepTrades = useMemo(() => new Set(["Electrical", "HVAC", "Plumbing", "Fire Protection"]), [])
+
+  const allRecommendations = useMemo(() => {
+    return vendors.map((v) => makeRecommendation(v, selectedProject.id, formData.requirements))
+  }, [vendors, selectedProject.id, formData.requirements])
+
+  const filteredRecommendations = useMemo(() => {
+    if (!formData.trade) return allRecommendations
+    if (formData.trade === "mep") return allRecommendations.filter((r) => allowedMepTrades.has(r.trade))
+    const token = tradeSearchToken(formData.trade)
+    return token ? allRecommendations.filter((r) => r.trade === token) : allRecommendations
+  }, [allRecommendations, allowedMepTrades, formData.trade])
+
+  const rankedRecommendations = useMemo(() => {
+    const list = [...filteredRecommendations]
+    if (sortMode === "Distance") return list.sort((a, b) => a.distanceMiles - b.distanceMiles)
+    if (sortMode === "Capacity") return list.sort((a, b) => capacityScore(b.capacity) - capacityScore(a.capacity))
+    if (sortMode === "Price") return list.sort((a, b) => pricingScore(b.pricing) - pricingScore(a.pricing))
+    return list.sort((a, b) => b.confidence - a.confidence)
+  }, [filteredRecommendations, sortMode])
+
+  const visibleRecommendations = useMemo(() => rankedRecommendations.slice(0, 10), [rankedRecommendations])
+
+  const recById = useMemo(() => new Map(rankedRecommendations.map((r) => [r.id, r])), [rankedRecommendations])
+
+  const selectedRecommendations = useMemo(
+    () => selectedSubs.map((id) => recById.get(id)).filter(Boolean) as VendorRecommendation[],
+    [recById, selectedSubs],
+  )
+
+  const selectedBidPackage = useMemo(
+    () => bidPackages.find((b) => b.id === selectedBidPackageId) ?? null,
+    [bidPackages, selectedBidPackageId],
+  )
+
+  const generateRecommendations = async () => {
+    if (!formData.trade) {
+      toast.error("Select a trade category to continue")
+      return
+    }
+
+    const token = formData.trade === "mep" ? "" : tradeSearchToken(formData.trade)
+
     setIsGenerating(true)
-    setTimeout(() => {
-      setIsGenerating(false)
+    setSelectedSubs([])
+    setReasoningModal(null)
+    try {
+      const [res] = await Promise.all([
+        getVendors(selectedProject.id, { page: 1, per_page: 80, view: "extended", filters: { search: token || undefined } }),
+        new Promise((r) => setTimeout(r, 1200)),
+      ])
+      setVendors(res.items)
       setStep(2)
-    }, 2000)
+      toast.success("Recommendations generated", { description: `${res.items.length} vendors evaluated.` })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unable to load vendors."
+      toast.error("Failed to generate recommendations", { description: message })
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   const toggleSubSelection = (id: number) => {
@@ -171,13 +362,36 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
     })
   }
 
-  const pushToProcore = () => {
-    toast.success("Subcontractors pushed to Procore Bid Package", {
-      description: "3 subcontractors have been added to the MEP bid package.",
-    })
-    setStep(1)
-    setSelectedSubs([])
-    setNotes("")
+  const pushToProcore = async () => {
+    if (!selectedBidPackageId) {
+      toast.error("No bid package selected", { description: "Select a bid package to push bidders to Procore." })
+      return
+    }
+    if (selectedSubs.length === 0) {
+      toast.error("No subcontractors selected", { description: "Select 1–3 subcontractors to push to Procore." })
+      return
+    }
+
+    setIsPushing(true)
+    try {
+      const bpTitle = selectedBidPackage?.title ?? "selected bid package"
+      const res = await postAddBidders(selectedProject.id, selectedBidPackageId, selectedSubs, notes)
+      if (!res.ok) {
+        toast.error("Push failed", { description: res.error })
+        return
+      }
+      toast.success("Bidders added to Procore bid package", {
+        description: `${selectedSubs.length} subcontractor${selectedSubs.length === 1 ? "" : "s"} added to ${bpTitle}.`,
+      })
+      setStep(1)
+      setSelectedSubs([])
+      setNotes("")
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unable to push bidders."
+      toast.error("Push failed", { description: message })
+    } finally {
+      setIsPushing(false)
+    }
   }
 
   return (
@@ -186,7 +400,7 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
       <div className="flex items-center justify-between px-6">
         <div>
           <h1 className="text-xl md:text-2xl font-semibold text-foreground">Subcontractor Matching</h1>
-          <p className="text-sm text-muted-foreground">{selectedProject}</p>
+          <p className="text-sm text-muted-foreground">{selectedProject.display_name ?? selectedProject.name}</p>
         </div>
         <div className="flex items-center gap-3">
           <DropdownMenu>
@@ -392,95 +606,117 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
               <h2 className="text-lg font-medium text-foreground">AI Subcontractor Ranking</h2>
               <p className="text-sm text-muted-foreground">Select up to 3 subcontractors for your bid package</p>
             </div>
-            <Badge className="bg-bannett-navy">{selectedSubs.length}/3 Selected</Badge>
+            <div className="flex items-center gap-2">
+              <Select value={sortMode} onValueChange={(value) => setSortMode(value as SortMode)}>
+                <SelectTrigger className="w-[220px] h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-60 overflow-y-auto z-[100]">
+                  <SelectItem value="Recommended">Recommended</SelectItem>
+                  <SelectItem value="Distance">Distance</SelectItem>
+                  <SelectItem value="Capacity">Capacity</SelectItem>
+                  <SelectItem value="Price">Price</SelectItem>
+                </SelectContent>
+              </Select>
+              <Badge className="bg-bannett-navy">{selectedSubs.length}/3 Selected</Badge>
+            </div>
           </div>
 
           <div className="space-y-3">
-            {subcontractors.map((sub, index) => (
-              <Card
-                key={sub.id}
-                className={cn(
-                  "cursor-pointer transition-all bg-card",
-                  selectedSubs.includes(sub.id) && "ring-2 ring-bannett-navy",
-                )}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-4">
-                    <div className="flex items-center justify-center" onClick={() => toggleSubSelection(sub.id)}>
-                      <Checkbox checked={selectedSubs.includes(sub.id)} />
-                    </div>
+            {visibleRecommendations.length === 0 ? (
+              <div className="p-4 rounded-lg bg-muted/50">
+                <p className="text-sm text-muted-foreground">No vendors found for the selected trade.</p>
+              </div>
+            ) : (
+              visibleRecommendations.map((sub, index) => (
+                <Card
+                  key={sub.id}
+                  className={cn(
+                    "cursor-pointer transition-all bg-card",
+                    selectedSubs.includes(sub.id) && "ring-2 ring-bannett-navy",
+                  )}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-4">
+                      <div className="flex items-center justify-center" onClick={() => toggleSubSelection(sub.id)}>
+                        <Checkbox checked={selectedSubs.includes(sub.id)} />
+                      </div>
 
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-muted-foreground">#{index + 1}</span>
-                            <h3 className="font-semibold text-card-foreground">{sub.name}</h3>
-                            <Badge variant="outline">{sub.trade}</Badge>
-                          </div>
-                          <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <MapPin className="w-3 h-3" />
-                              {sub.distance}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Star className="w-3 h-3 text-warning" />
-                              {sub.performance}% performance
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <TrendingUp className="w-3 h-3" />
-                              {sub.pricing}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                          <div className="text-right">
-                            <div className="flex items-center gap-1">
-                              <span className="text-2xl font-semibold text-bannett-navy">{sub.confidence}%</span>
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-muted-foreground">#{index + 1}</span>
+                              <h3 className="font-semibold text-card-foreground">{sub.name}</h3>
+                              <Badge variant="outline">{sub.trade}</Badge>
                             </div>
-                            <span className="text-xs text-muted-foreground">Match Score</span>
+                            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {sub.distance}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Star className="w-3 h-3 text-warning" />
+                                {sub.performance}% performance
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <TrendingUp className="w-3 h-3" />
+                                {sub.pricing}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Last updated: {formatShortDate(sub.updated_at)}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <div className="text-right">
+                              <div className="flex items-center gap-1">
+                                <span className="text-2xl font-semibold text-bannett-navy">{sub.confidence}%</span>
+                              </div>
+                              <span className="text-xs text-muted-foreground">Match Score</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 mt-3">
+                          <Badge
+                            variant={sub.capacity === "High" ? "default" : "secondary"}
+                            className={sub.capacity === "High" ? "bg-success" : ""}
+                          >
+                            {sub.capacity} Capacity
+                          </Badge>
+                          <Badge
+                            variant={sub.availability === "Available" ? "default" : "secondary"}
+                            className={sub.availability === "Available" ? "bg-success" : "bg-warning text-foreground"}
+                          >
+                            {sub.availability}
+                          </Badge>
+                          <div className="flex gap-1">
+                            {sub.certifications.slice(0, 2).map((cert) => (
+                              <Badge key={cert} variant="outline" className="text-xs">
+                                <Shield className="w-3 h-3 mr-1" />
+                                {cert}
+                              </Badge>
+                            ))}
+                            {sub.certifications.length > 2 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{sub.certifications.length - 2}
+                              </Badge>
+                            )}
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-4 mt-3">
-                        <Badge
-                          variant={sub.capacity === "High" ? "default" : "secondary"}
-                          className={sub.capacity === "High" ? "bg-success" : ""}
-                        >
-                          {sub.capacity} Capacity
-                        </Badge>
-                        <Badge
-                          variant={sub.availability === "Available" ? "default" : "secondary"}
-                          className={sub.availability === "Available" ? "bg-success" : "bg-warning text-foreground"}
-                        >
-                          {sub.availability}
-                        </Badge>
-                        <div className="flex gap-1">
-                          {sub.certifications.slice(0, 2).map((cert) => (
-                            <Badge key={cert} variant="outline" className="text-xs">
-                              <Shield className="w-3 h-3 mr-1" />
-                              {cert}
-                            </Badge>
-                          ))}
-                          {sub.certifications.length > 2 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{sub.certifications.length - 2}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => setReasoningModal(sub)}>
+                        View Details
+                        <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
                     </div>
-
-                    <Button variant="ghost" size="sm" onClick={() => setReasoningModal(sub)}>
-                      View Details
-                      <ChevronRight className="w-4 h-4 ml-1" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
 
           <div className="flex justify-end">
@@ -515,13 +751,32 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="p-4 rounded-lg bg-muted/50">
+                      <p className="text-xs text-muted-foreground">Trade Fit</p>
+                      <p className="text-sm font-medium text-card-foreground mt-1">{reasoningModal.tradeFit}</p>
+                      {(reasoningModal.city || reasoningModal.state_code) && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Based in {reasoningModal.city ?? "—"}, {reasoningModal.state_code ?? "—"}
+                        </p>
+                      )}
+                    </div>
+                    <div className="p-4 rounded-lg bg-muted/50">
+                      <p className="text-xs text-muted-foreground">Availability Window</p>
+                      <p className="text-sm font-medium text-card-foreground mt-1">{reasoningModal.availabilityWindow}</p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Capacity: {reasoningModal.capacity} • Pricing: {reasoningModal.pricing}
+                      </p>
+                    </div>
+                  </div>
+
                   {/* Contact Info */}
                   <div className="flex gap-4">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={async () => {
-                        const phone = "(503) 555-0123"
+                        const phone = reasoningModal.business_phone ?? "(503) 555-0123"
                         try {
                           await navigator.clipboard.writeText(phone)
                           toast.success("Phone copied", { description: phone })
@@ -531,7 +786,7 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
                       }}
                     >
                       <Phone className="w-4 h-4 mr-2" />
-                      (503) 555-0123
+                      {reasoningModal.business_phone ?? "(503) 555-0123"}
                     </Button>
                     <Button
                       variant="outline"
@@ -593,7 +848,7 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
 
                   {/* Past Projects */}
                   <div>
-                    <h4 className="font-medium mb-2 text-card-foreground">Relevant Past Projects</h4>
+                    <h4 className="font-medium mb-2 text-card-foreground">Past Work</h4>
                     <div className="flex flex-wrap gap-2">
                       {reasoningModal.pastProjects.map((p, i) => (
                         <Badge key={i} variant="secondary">
@@ -620,7 +875,7 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
                   <div className="p-3 rounded-lg bg-warning/10">
                     <h4 className="font-medium mb-2 flex items-center gap-2 text-card-foreground">
                       <AlertCircle className="w-4 h-4 text-warning" />
-                      Risk Factors
+                      Risk Flags
                     </h4>
                     <ul className="space-y-1">
                       {reasoningModal.riskFactors.map((r, i) => (
@@ -666,9 +921,12 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
             <div>
               <h3 className="font-medium mb-3 text-card-foreground">Selected Subcontractors</h3>
               <div className="space-y-3">
-                {subcontractors
-                  .filter((s) => selectedSubs.includes(s.id))
-                  .map((sub) => (
+                {selectedRecommendations.length === 0 ? (
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <p className="text-sm text-muted-foreground">No subcontractors selected.</p>
+                  </div>
+                ) : (
+                  selectedRecommendations.map((sub) => (
                     <div key={sub.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-bannett-navy flex items-center justify-center">
@@ -681,8 +939,46 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
                       </div>
                       <Badge className="bg-bannett-navy">{sub.confidence}% match</Badge>
                     </div>
-                  ))}
+                  ))
+                )}
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Bid Package</Label>
+              {bidPackagesLoading ? (
+                <div className="p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground">Loading bid packages…</div>
+              ) : bidPackages.length === 0 ? (
+                <div className="p-3 rounded-lg bg-warning/10 text-sm text-card-foreground">
+                  No bid packages found for this project. Create one in Procore (Bidding → Bid Packages) to push bidders.
+                </div>
+              ) : (
+                <Select
+                  value={selectedBidPackageId ? String(selectedBidPackageId) : ""}
+                  onValueChange={(value) => setSelectedBidPackageId(Number(value))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a bid package" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60 overflow-y-auto z-[100]">
+                    {bidPackages.map((bp) => (
+                      <SelectItem key={bp.id} value={String(bp.id)}>
+                        {bp.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <p className="text-xs text-muted-foreground">Mock push adds bidders to a Procore bid package.</p>
+              {selectedBidPackage && (
+                <p className="text-xs text-muted-foreground">
+                  Status: {selectedBidPackage.status}
+                  {" • "}
+                  Due: {selectedBidPackage.due_date ?? "—"}
+                  {" • "}
+                  Updated: {formatShortDate(selectedBidPackage.updated_at)}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -720,9 +1016,22 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
               </div>
             </div>
 
-            <Button onClick={pushToProcore} className="w-full bg-bannett-navy hover:bg-bannett-navy/90">
-              Push to Procore Bid Package
-              <ArrowRight className="w-4 h-4 ml-2" />
+            <Button
+              onClick={pushToProcore}
+              className="w-full bg-bannett-navy hover:bg-bannett-navy/90"
+              disabled={isPushing || bidPackagesLoading || bidPackages.length === 0 || !selectedBidPackageId}
+            >
+              {isPushing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Pushing…
+                </>
+              ) : (
+                <>
+                  Push to Procore Bid Package
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              )}
             </Button>
           </CardContent>
         </Card>

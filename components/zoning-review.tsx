@@ -41,9 +41,10 @@ import {
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import type { ModuleType } from "@/app/page"
+import type { ProcoreProject } from "@/lib/procore/types"
 
 interface ZoningReviewProps {
-  selectedProject: string
+  selectedProject: ProcoreProject
   onLogout?: () => void
   setActiveModule?: (module: ModuleType) => void
 }
@@ -227,7 +228,7 @@ export function ZoningReview({ selectedProject, onLogout, setActiveModule }: Zon
       <div className="flex items-center justify-between px-6">
         <div>
           <h1 className="text-xl md:text-2xl font-semibold text-foreground">Zoning & Preconstruction Review</h1>
-          <p className="text-sm text-muted-foreground">{selectedProject}</p>
+          <p className="text-sm text-muted-foreground">{selectedProject.display_name ?? selectedProject.name}</p>
         </div>
         <div className="flex items-center gap-3">
           <DropdownMenu>
