@@ -58,6 +58,18 @@ export type ProcoreBidPackage = {
   updated_at?: string
 }
 
+export type ProcoreBid = {
+  id: number
+  bid_package_id: number
+  vendor_id: number
+  lump_sum_amount?: number | null
+  bidder_comments?: string
+  is_bidder_committed?: boolean
+  submitted: boolean
+  created_at?: string
+  updated_at?: string
+}
+
 export type ProcoreDocumentType = "file" | "folder"
 
 export type ProcoreDocumentEntry = {
@@ -76,8 +88,17 @@ export type ProcoreUpload = {
   fields: Record<string, string>
 }
 
+export type ProcoreEstimateDestination = "budget" | "commitments" | "prime_contract" | "sov"
+
 export type SyncLogStatus = "success" | "warning" | "error" | "info"
-export type SyncLogType = "estimate_export" | "zoning_export" | "bidder_push" | "auth" | "directory_sync" | "documents_upload"
+export type SyncLogType =
+  | "estimate_export"
+  | "zoning_export"
+  | "bidder_push"
+  | "auth"
+  | "directory_sync"
+  | "documents_upload"
+  | "drawing_upload"
 
 export type SyncLogEntry = {
   id: number
@@ -86,4 +107,51 @@ export type SyncLogEntry = {
   status: SyncLogStatus
   message: string
   created_at: string
+}
+
+export type ProcoreCostCode = {
+  id: number
+  full_code: string
+  name: string
+  created_at?: string
+  updated_at?: string
+}
+
+export type ProcoreDrawingSet = {
+  id: number
+  name: string
+  created_at?: string
+  updated_at?: string
+}
+
+export type ProcoreDrawingUploadStatus = "processing" | "complete" | "failed"
+
+export type ProcoreDrawingUpload = {
+  id: number
+  filename: string
+  drawing_set_id?: number | null
+  status: ProcoreDrawingUploadStatus
+  sheet_count?: number
+  page_count?: number
+  created_at: string
+  updated_at: string
+}
+
+export type ProcoreAppPermission = {
+  area: string
+  level: "read" | "write"
+  description: string
+  endpoint_examples: string[]
+}
+
+export type ProcoreEmbeddedAppConfig = {
+  app_name: string
+  installed: boolean
+  version_key: string
+  configuration_name: string
+  enabled_project_ids: number[]
+  required_permissions: ProcoreAppPermission[]
+  notes: string[]
+  created_at: string
+  updated_at: string
 }

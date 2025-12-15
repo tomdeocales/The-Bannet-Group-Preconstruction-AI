@@ -37,8 +37,10 @@ import {
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import type { ModuleType } from "@/app/page"
-import { getSyncLogs } from "@/lib/procore/client"
-import type { ProcoreProject, SyncLogEntry } from "@/lib/procore/types"
+import { ProcoreDocumentPickerDialog } from "@/components/procore-document-picker-dialog"
+import { getAppConfig, getSyncLogs, postAppConfigAction } from "@/lib/procore/client"
+import { useProcoreEmbedContext } from "@/hooks/use-procore-embed-context"
+import type { ProcoreEmbeddedAppConfig, ProcoreProject, SyncLogEntry } from "@/lib/procore/types"
 
 interface ProcoreSyncProps {
   selectedProject: ProcoreProject
@@ -63,9 +65,37 @@ const syncTypeLabel: Record<SyncLogEntry["type"], string> = {
   auth: "Authentication",
   directory_sync: "Directory sync",
   documents_upload: "Documents upload",
+  drawing_upload: "Drawing upload",
 }
 
+const apiCoverage = [
+  {
+    workflow: "AI Estimator (Drawings → Parsing → Estimate → Review)",
+    endpoints: [
+      "GET /rest/v1.0/projects",
+      "GET /rest/v1.0/cost_codes?project_id=:project_id",
+      "GET /rest/v1.0/projects/:project_id/drawing_sets",
+      "GET /rest/v1.1/projects/:project_id/drawing_uploads",
+      "POST /rest/v1.1/projects/:project_id/uploads",
+      "GET /rest/v2.0/projects/:project_id/documents",
+    ],
+  },
+  {
+    workflow: "Subcontractor Matching (Directory → Planroom)",
+    endpoints: [
+      "GET /rest/v1.0/projects/:project_id/vendors",
+      "GET /rest/v1.1/projects/:project_id/bid_packages",
+      "POST /rest/v1.0/projects/:project_id/bid_packages/:bid_package_id/bids",
+    ],
+  },
+  {
+    workflow: "Zoning & Preconstruction Review (Export to Documents)",
+    endpoints: ["POST /rest/v1.1/projects/:project_id/uploads", "GET /rest/v2.0/projects/:project_id/documents"],
+  },
+]
+
 export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: ProcoreSyncProps) {
+  const embed = useProcoreEmbedContext()
   const [isConnected, setIsConnected] = useState(true)
   const [isSyncing, setIsSyncing] = useState(false)
   const [mappings, setMappings] = useState(fieldMappings)
@@ -77,6 +107,11 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
   const [lastSyncAt, setLastSyncAt] = useState("—")
   const [logs, setLogs] = useState<SyncLogEntry[]>([])
   const [logsLoading, setLogsLoading] = useState(false)
+  const [appConfig, setAppConfig] = useState<ProcoreEmbeddedAppConfig | null>(null)
+  const [procoreMode, setProcoreMode] = useState<string>("mock")
+  const [appEnabledForProject, setAppEnabledForProject] = useState<boolean | null>(null)
+  const [appConfigLoading, setAppConfigLoading] = useState(false)
+  const [documentsBrowserOpen, setDocumentsBrowserOpen] = useState(false)
 
   const formatTimestamp = (date: Date) => {
     const datePart = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
@@ -85,6 +120,8 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
   }
 
   const projectKey = selectedProject.display_name ?? selectedProject.name
+
+  const canUseAppForProject = appEnabledForProject !== false
 
   const refreshLogs = useMemo(() => {
     return async () => {
@@ -104,10 +141,29 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
     }
   }, [selectedProject.id])
 
+  const refreshAppConfig = useMemo(() => {
+    return async () => {
+      setAppConfigLoading(true)
+      try {
+        const res = await getAppConfig(selectedProject.id)
+        setAppConfig(res.config)
+        setProcoreMode(res.procore_mode)
+        setAppEnabledForProject(res.enabled_for_project)
+      } catch {
+        setAppConfig(null)
+        setProcoreMode("mock")
+        setAppEnabledForProject(null)
+      } finally {
+        setAppConfigLoading(false)
+      }
+    }
+  }, [selectedProject.id])
+
   useEffect(() => {
     refreshLogs()
+    refreshAppConfig()
     setExpandedLog(null)
-  }, [refreshLogs, selectedProject.id])
+  }, [refreshLogs, refreshAppConfig, selectedProject.id])
 
   const appendMockLog = async (entry: Pick<SyncLogEntry, "type" | "status" | "message">) => {
     try {
@@ -123,6 +179,18 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
   }
 
   const handleReauthorize = () => {
+    if (!canUseAppForProject) {
+      toast.error("App not configured for this project", {
+        description: "Ask a Procore Company Admin to enable this embedded app for the project.",
+      })
+      return
+    }
+
+    if (procoreMode === "live") {
+      if (typeof window !== "undefined") window.location.assign("/api/procore/login")
+      return
+    }
+
     setIsSyncing(true)
     setTimeout(async () => {
       setIsSyncing(false)
@@ -138,8 +206,21 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
   }
 
   const handleSync = () => {
+    if (!canUseAppForProject) {
+      toast.error("App not configured for this project", {
+        description: "Enable the app configuration for this project to run sync actions.",
+      })
+      return
+    }
+
     if (!isConnected) {
       toast.error("Not connected to Procore", { description: "Reconnect to run a sync." })
+      return
+    }
+
+    if (procoreMode === "live") {
+      toast.message("Sync requested", { description: "Live sync is mocked; fetching latest sync logs." })
+      refreshLogs()
       return
     }
 
@@ -278,15 +359,15 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-2 mb-2">
-                    <FileText className="w-4 h-4 text-bannett-navy" />
-                    <span className="text-sm font-medium text-card-foreground">Documents</span>
-                  </div>
-                  <p className="text-2xl font-semibold text-card-foreground">24</p>
-                  <p className="text-xs text-muted-foreground">synced this week</p>
-                </div>
+	              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+	                <div className="p-4 rounded-lg bg-muted/50">
+	                  <div className="flex items-center gap-2 mb-2">
+	                    <FileText className="w-4 h-4 text-bannett-navy" />
+	                    <span className="text-sm font-medium text-card-foreground">Documents</span>
+	                  </div>
+	                  <p className="text-2xl font-semibold text-card-foreground">24</p>
+	                  <p className="text-xs text-muted-foreground">synced this week</p>
+	                </div>
                 <div className="p-4 rounded-lg bg-muted/50">
                   <div className="flex items-center gap-2 mb-2">
                     <Calculator className="w-4 h-4 text-bannett-blue" />
@@ -302,14 +383,29 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
                   </div>
                   <p className="text-2xl font-semibold text-card-foreground">12</p>
                   <p className="text-xs text-muted-foreground">in directory</p>
-                </div>
-              </div>
+	                </div>
+	              </div>
 
-              <div className="flex gap-3">
-                <Button
+	              <div className="flex items-center justify-between gap-4 p-4 rounded-lg bg-muted/50">
+	                <div className="space-y-1">
+	                  <p className="text-sm font-medium text-card-foreground">Documents browser</p>
+	                  <p className="text-xs text-muted-foreground">Navigate folders and verify recent exports (mock).</p>
+	                </div>
+	                <Button
+	                  variant="outline"
+	                  onClick={() => setDocumentsBrowserOpen(true)}
+	                  disabled={!isConnected || !canUseAppForProject}
+	                >
+	                  <FileText className="w-4 h-4 mr-2" />
+	                  Browse Documents
+	                </Button>
+	              </div>
+
+	              <div className="flex gap-3">
+	                <Button
                   onClick={handleSync}
                   className="bg-bannett-navy hover:bg-bannett-navy/90"
-                  disabled={isSyncing || !isConnected}
+                  disabled={isSyncing || !isConnected || !canUseAppForProject}
                 >
                   {isSyncing ? (
                     <>
@@ -323,10 +419,162 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
                     </>
                   )}
                 </Button>
-                <Button variant="outline" onClick={handleReauthorize} disabled={isSyncing}>
+                <Button variant="outline" onClick={handleReauthorize} disabled={isSyncing || !canUseAppForProject}>
                   <Link2 className="w-4 h-4 mr-2" />
                   Reauthorize Connection
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card">
+            <CardHeader>
+              <CardTitle className="text-card-foreground">Embedded App Configuration</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {appConfigLoading ? (
+                <div className="space-y-3">
+                  <div className="h-4 w-40 bg-muted rounded" />
+                  <div className="h-4 w-64 bg-muted rounded" />
+                  <div className="h-4 w-56 bg-muted rounded" />
+                </div>
+              ) : appConfig ? (
+                <>
+                  <div className="flex items-center justify-between gap-3 p-4 rounded-lg bg-muted/50">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-card-foreground">{appConfig.configuration_name}</p>
+                      <p className="text-xs text-muted-foreground">App Version Key: {appConfig.version_key}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="capitalize">
+                        {procoreMode}
+                      </Badge>
+                      <Badge className={appConfig.installed ? "bg-success text-primary-foreground" : "bg-destructive"}>
+                        {appConfig.installed ? "Installed" : "Not installed"}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-lg bg-muted/50 space-y-1">
+                      <p className="text-xs text-muted-foreground">Enabled projects</p>
+                      <p className="text-lg font-semibold text-card-foreground">{appConfig.enabled_project_ids.length}</p>
+                      <p className="text-xs text-muted-foreground">Procore requires config applied per-project.</p>
+                    </div>
+                    <div className={cn("p-4 rounded-lg border space-y-2", canUseAppForProject ? "bg-success/5 border-success/20" : "bg-warning/10 border-warning/30")}>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium text-card-foreground">This project</p>
+                        <Badge className={canUseAppForProject ? "bg-success text-primary-foreground" : "bg-warning text-primary-foreground"}>
+                          {canUseAppForProject ? "Enabled" : "Not enabled"}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {canUseAppForProject
+                          ? "This embedded app is configured for the selected project."
+                          : "In Procore, the app will not appear under “Select an App” until enabled for this project."}
+                      </p>
+                      {!canUseAppForProject && procoreMode === "mock" && (
+                        <Button
+                          size="sm"
+                          className="bg-bannett-navy hover:bg-bannett-navy/90"
+                          onClick={async () => {
+                            try {
+                              const res = await postAppConfigAction("enable_project", selectedProject.id)
+                              if ("ok" in res && res.ok) {
+                                setAppConfig(res.config)
+                                setAppEnabledForProject(true)
+                                toast.success("Enabled for project", { description: projectKey })
+                              }
+                            } catch (err) {
+                              toast.error("Unable to enable project", { description: (err as Error).message })
+                            }
+                          }}
+                        >
+                          Enable for this project (mock)
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium text-card-foreground">Required permissions</p>
+                    <div className="space-y-2">
+                      {appConfig.required_permissions.map((perm) => (
+                        <div key={`${perm.area}-${perm.level}`} className="p-3 rounded-lg bg-muted/50">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-medium text-card-foreground">{perm.area}</p>
+                            <Badge variant="secondary" className="uppercase">
+                              {perm.level}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">{perm.description}</p>
+                          <div className="mt-2 space-y-1">
+                            {perm.endpoint_examples.slice(0, 3).map((ex) => (
+                              <p key={ex} className="text-[11px] text-muted-foreground font-mono">
+                                {ex}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium text-card-foreground">Embedded context</p>
+                    {embed.embedded && embed.context ? (
+                      <div className="p-3 rounded-lg bg-muted/50 text-sm">
+                        <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                          <div>
+                            <span className="font-medium text-card-foreground">Mode:</span> {embed.context.mode ?? "—"}
+                          </div>
+                          <div>
+                            <span className="font-medium text-card-foreground">View:</span> {embed.context.view ?? "—"}
+                          </div>
+                          <div>
+                            <span className="font-medium text-card-foreground">Company:</span> {embed.context.company_id ?? "—"}
+                          </div>
+                          <div>
+                            <span className="font-medium text-card-foreground">Project:</span> {embed.context.project_id ?? "—"}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground">
+                        Not running inside a Procore iframe context (full-screen or side panel).
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground">
+                  Unable to load app configuration.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card">
+            <CardHeader>
+              <CardTitle className="text-card-foreground">API Coverage (Mocked)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                This mockup uses Procore-like request shapes and parameters. Live mode will call these endpoints when OAuth is connected.
+              </p>
+              <div className="space-y-3">
+                {apiCoverage.map((row) => (
+                  <div key={row.workflow} className="p-4 rounded-lg bg-muted/50">
+                    <p className="text-sm font-medium text-card-foreground">{row.workflow}</p>
+                    <div className="mt-2 space-y-1">
+                      {row.endpoints.map((ep) => (
+                        <p key={ep} className="text-[11px] text-muted-foreground font-mono">
+                          {ep}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -364,6 +612,19 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
                 <Button
                   className="bg-bannett-navy hover:bg-bannett-navy/90"
                   onClick={() => {
+                    if (!canUseAppForProject) {
+                      toast.error("App not configured for this project", {
+                        description: "Ask a Procore Company Admin to enable this embedded app for the project.",
+                      })
+                      return
+                    }
+
+                    if (procoreMode === "live") {
+                      setConnectModalOpen(false)
+                      if (typeof window !== "undefined") window.location.assign("/api/procore/login")
+                      return
+                    }
+
                     setIsSyncing(true)
                     setTimeout(() => {
                       setIsSyncing(false)
@@ -660,6 +921,15 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
       </Tabs>
         </CardContent>
       </Card>
+
+      <ProcoreDocumentPickerDialog
+        open={documentsBrowserOpen}
+        onOpenChange={setDocumentsBrowserOpen}
+        projectId={selectedProject.id}
+        title="Procore Documents (mock)"
+        mode="browse"
+        initialFolderPath="Preconstruction"
+      />
     </div>
   )
 }

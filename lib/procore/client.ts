@@ -1,7 +1,13 @@
 import type {
+  ProcoreBid,
   ProcoreBidPackage,
   ProcoreCompany,
+  ProcoreCostCode,
   ProcoreDocumentEntry,
+  ProcoreDrawingSet,
+  ProcoreDrawingUpload,
+  ProcoreEmbeddedAppConfig,
+  ProcoreEstimateDestination,
   ProcorePaginatedResponse,
   ProcoreProject,
   ProcoreUpload,
@@ -106,6 +112,44 @@ export async function getBidPackages(projectId: number, params: GetBidPackagesPa
   return requestJson<GetBidPackagesResponse>(withQuery(`/api/procore/projects/${projectId}/bid-packages`, query))
 }
 
+export type GetBidPackageBidsParams = {
+  page?: number
+  per_page?: number
+}
+
+export type GetBidPackageBidsResponse = ProcorePaginatedResponse<ProcoreBid> & {
+  project_id: number
+  bid_package_id: number
+}
+
+export async function getBidPackageBids(projectId: number, bidPackageId: number, params: GetBidPackageBidsParams = {}) {
+  const query: Record<string, QueryValue> = { page: params.page, per_page: params.per_page }
+  return requestJson<GetBidPackageBidsResponse>(
+    withQuery(`/api/procore/projects/${projectId}/bid-packages/${bidPackageId}/bids`, query),
+  )
+}
+
+export type GetBidPackageDocumentsParams = {
+  page?: number
+  per_page?: number
+}
+
+export type GetBidPackageDocumentsResponse = ProcorePaginatedResponse<ProcoreDocumentEntry> & {
+  project_id: number
+  bid_package_id: number
+}
+
+export async function getBidPackageDocuments(
+  projectId: number,
+  bidPackageId: number,
+  params: GetBidPackageDocumentsParams = {},
+) {
+  const query: Record<string, QueryValue> = { page: params.page, per_page: params.per_page }
+  return requestJson<GetBidPackageDocumentsResponse>(
+    withQuery(`/api/procore/projects/${projectId}/bid-packages/${bidPackageId}/documents`, query),
+  )
+}
+
 export type PostAddBiddersResponse =
   | { ok: true; project_id: number; bid_package_id: number; vendor_ids: number[]; notes: string; created_at: string }
   | { ok: false; error: string }
@@ -115,6 +159,32 @@ export async function postAddBidders(projectId: number, bidPackageId: number, ve
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ bidPackageId, vendorIds, notes }),
+  })
+}
+
+export type ExportType = "estimate" | "zoning"
+
+export type PostProjectExportResponse =
+  | {
+      ok: true
+      project_id: number
+      export_type: ExportType
+      destination?: ProcoreEstimateDestination
+      upload: ProcoreUpload
+      document?: ProcoreDocumentEntry | null
+      note?: string
+    }
+  | { error: string }
+
+export async function postProjectExport(
+  projectId: number,
+  exportType: ExportType,
+  params?: { filename?: string; folder_path?: string; content_type?: string; size?: number; destination?: ProcoreEstimateDestination },
+) {
+  return requestJson<PostProjectExportResponse>(`/api/procore/projects/${projectId}/exports`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ export_type: exportType, ...params }),
   })
 }
 
@@ -143,6 +213,63 @@ export async function getDocuments(projectId: number, params: GetDocumentsParams
   return requestJson<GetDocumentsResponse>(withQuery(`/api/procore/projects/${projectId}/documents`, query))
 }
 
+export type GetCostCodesParams = {
+  page?: number
+  per_page?: number
+  filters?: { search?: string }
+}
+
+export type GetCostCodesResponse = ProcorePaginatedResponse<ProcoreCostCode> & { project_id: number }
+
+export async function getCostCodes(projectId: number, params: GetCostCodesParams = {}) {
+  const query: Record<string, QueryValue> = { page: params.page, per_page: params.per_page }
+  if (params.filters?.search) query["filters[search]"] = params.filters.search
+  return requestJson<GetCostCodesResponse>(withQuery(`/api/procore/projects/${projectId}/cost-codes`, query))
+}
+
+export type GetDrawingSetsParams = {
+  page?: number
+  per_page?: number
+  filters?: { search?: string }
+}
+
+export type GetDrawingSetsResponse = ProcorePaginatedResponse<ProcoreDrawingSet> & { project_id: number }
+
+export async function getDrawingSets(projectId: number, params: GetDrawingSetsParams = {}) {
+  const query: Record<string, QueryValue> = { page: params.page, per_page: params.per_page }
+  if (params.filters?.search) query["filters[search]"] = params.filters.search
+  return requestJson<GetDrawingSetsResponse>(withQuery(`/api/procore/projects/${projectId}/drawing-sets`, query))
+}
+
+export type GetDrawingUploadsParams = {
+  page?: number
+  per_page?: number
+  view?: string
+  filters?: { search?: string }
+}
+
+export type GetDrawingUploadsResponse = ProcorePaginatedResponse<ProcoreDrawingUpload> & { project_id: number; view?: string }
+
+export async function getDrawingUploads(projectId: number, params: GetDrawingUploadsParams = {}) {
+  const query: Record<string, QueryValue> = { page: params.page, per_page: params.per_page, view: params.view }
+  if (params.filters?.search) query["filters[search]"] = params.filters.search
+  return requestJson<GetDrawingUploadsResponse>(withQuery(`/api/procore/projects/${projectId}/drawing-uploads`, query))
+}
+
+export async function postDrawingUpload(
+  projectId: number,
+  params: { filename: string; drawing_set_id?: number | null; sheet_count?: number; page_count?: number },
+) {
+  return requestJson<{ ok: true; project_id: number; upload: ProcoreDrawingUpload } | { error: string }>(
+    `/api/procore/projects/${projectId}/drawing-uploads`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params),
+    },
+  )
+}
+
 export type GetSyncLogsParams = {
   page?: number
   per_page?: number
@@ -162,3 +289,24 @@ export async function getSyncLogs(projectId: number, params: GetSyncLogsParams =
 
 export type CreateUploadResponse = { project_id?: number; company_id?: number; upload: ProcoreUpload }
 
+export type GetAppConfigResponse = {
+  procore_mode: string
+  connected: boolean
+  company: ProcoreCompany
+  config: ProcoreEmbeddedAppConfig
+  enabled_for_project: boolean | null
+}
+
+export async function getAppConfig(projectId?: number) {
+  const query: Record<string, QueryValue> = {}
+  if (projectId) query["project_id"] = projectId
+  return requestJson<GetAppConfigResponse>(withQuery("/api/procore/app-config", query))
+}
+
+export async function postAppConfigAction(action: "enable_project" | "disable_project", projectId: number) {
+  return requestJson<{ ok: true; config: ProcoreEmbeddedAppConfig } | { error: string }>("/api/procore/app-config", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, project_id: projectId }),
+  })
+}

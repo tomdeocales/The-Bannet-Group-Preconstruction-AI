@@ -1,7 +1,12 @@
 import type {
   ProcoreBidPackage,
+  ProcoreBid,
   ProcoreCompany,
+  ProcoreCostCode,
   ProcoreDocumentEntry,
+  ProcoreDrawingSet,
+  ProcoreDrawingUpload,
+  ProcoreEmbeddedAppConfig,
   ProcorePaginatedResponse,
   ProcoreProject,
   ProcoreUpload,
@@ -29,14 +34,20 @@ type AddBiddersInput = {
 
 type MockDb = {
   company: ProcoreCompany
+  appConfig: ProcoreEmbeddedAppConfig
   projects: ProcoreProject[]
   vendors: ProcoreVendor[]
+  costCodes: ProcoreCostCode[]
   vendorIdsByProjectId: Record<number, number[]>
   bidPackagesByProjectId: Record<number, ProcoreBidPackage[]>
+  bidsByProjectId: Record<number, Record<number, ProcoreBid[]>>
+  bidPackageDocumentsByProjectId: Record<number, Record<number, ProcoreDocumentEntry[]>>
   documentsByProjectId: Record<number, ProcoreDocumentEntry[]>
+  drawingSetsByProjectId: Record<number, ProcoreDrawingSet[]>
+  drawingUploadsByProjectId: Record<number, ProcoreDrawingUpload[]>
   syncLogsByProjectId: Record<number, SyncLogEntry[]>
   uploadsByUuid: Record<string, ProcoreUpload>
-  counters: { syncLogId: number; uploadCounter: number }
+  counters: { syncLogId: number; uploadCounter: number; drawingUploadId: number; bidId: number }
 }
 
 declare global {
@@ -544,12 +555,270 @@ const seedSyncLogs = (projects: ProcoreProject[]) => {
   return { byProject, nextId: id + 1 }
 }
 
+const seedAppConfig = (projects: ProcoreProject[]): ProcoreEmbeddedAppConfig => {
+  const now = toIso(daysAgo(0))
+  return {
+    app_name: "The Bannett Group — Preconstruction AI Tool",
+    installed: true,
+    version_key: "bannett-precon-ai-tool@mock-1.0.0",
+    configuration_name: "Bannett Preconstruction (Embedded App)",
+    enabled_project_ids: projects.map((p) => p.id),
+    required_permissions: [
+      {
+        area: "Projects",
+        level: "read",
+        description: "Read project metadata for selectors and context routing.",
+        endpoint_examples: ["/rest/v1.0/projects"],
+      },
+      {
+        area: "Directory (Vendors)",
+        level: "read",
+        description: "List project vendors for subcontractor matching and bid invites.",
+        endpoint_examples: ["/rest/v1.0/projects/:project_id/vendors"],
+      },
+      {
+        area: "Preconstruction (Planroom / Bidding)",
+        level: "write",
+        description: "Read bid packages and create bidder entries (bids) in a bid package.",
+        endpoint_examples: [
+          "/rest/v1.1/projects/:project_id/bid_packages",
+          "/rest/v1.0/projects/:project_id/bid_packages/:bid_package_id/bids",
+        ],
+      },
+      {
+        area: "Documents",
+        level: "write",
+        description: "Prepare uploads and (when implemented) associate exports into project Documents.",
+        endpoint_examples: ["/rest/v2.0/projects/:project_id/documents", "/rest/v1.1/projects/:project_id/uploads"],
+      },
+    ],
+    notes: [
+      "Installed by a Company Admin via Procore App Management using the App Version Key.",
+      "Configuration must be applied to projects to appear under “Select an App” in Procore.",
+      "In live mode, missing OAuth scopes/permissions will result in 401/403 responses from Procore APIs.",
+    ],
+    created_at: now,
+    updated_at: now,
+  }
+}
+
+const seedCostCodes = (): ProcoreCostCode[] => {
+  const now = toIso(daysAgo(0))
+  const mk = (id: number, full_code: string, name: string): ProcoreCostCode => ({
+    id,
+    full_code,
+    name,
+    created_at: toIso(daysAgo(420)),
+    updated_at: now,
+  })
+
+  return [
+    mk(501, "01 10 00", "Summary of Work"),
+    mk(502, "01 25 00", "Substitution Procedures"),
+    mk(503, "01 30 00", "Administrative Requirements"),
+    mk(504, "01 50 00", "Temporary Facilities and Controls"),
+    mk(505, "02 41 19", "Selective Demolition"),
+    mk(506, "03 30 00", "Cast-in-Place Concrete"),
+    mk(507, "03 35 00", "Concrete Finishing"),
+    mk(508, "04 20 00", "Unit Masonry"),
+    mk(509, "05 12 00", "Structural Steel Framing"),
+    mk(510, "05 50 00", "Metal Fabrications"),
+    mk(511, "06 10 00", "Rough Carpentry"),
+    mk(512, "07 21 00", "Thermal Insulation"),
+    mk(513, "07 27 00", "Air Barriers"),
+    mk(514, "07 52 00", "Modified Bituminous Membrane Roofing"),
+    mk(515, "08 11 13", "Hollow Metal Doors and Frames"),
+    mk(516, "08 41 13", "Aluminum-Framed Entrances and Storefronts"),
+    mk(517, "09 21 16", "Gypsum Board Assemblies"),
+    mk(518, "09 29 00", "Gypsum Board"),
+    mk(519, "09 51 13", "Acoustical Panel Ceilings"),
+    mk(520, "09 65 00", "Resilient Flooring"),
+    mk(521, "09 91 13", "Exterior Painting"),
+    mk(522, "10 14 00", "Signage"),
+    mk(523, "21 13 13", "Wet-Pipe Sprinkler Systems"),
+    mk(524, "22 05 00", "Common Work Results for Plumbing"),
+    mk(525, "22 40 00", "Plumbing Fixtures"),
+    mk(526, "23 05 00", "Common Work Results for HVAC"),
+    mk(527, "23 31 00", "HVAC Ducts and Casings"),
+    mk(528, "23 37 00", "Air Outlets and Inlets"),
+    mk(529, "26 05 00", "Common Work Results for Electrical"),
+    mk(530, "26 05 19", "Low-Voltage Electrical Power Conductors and Cables"),
+    mk(531, "26 51 00", "Interior Lighting"),
+    mk(532, "27 05 00", "Common Work Results for Communications"),
+    mk(533, "28 31 00", "Fire Detection and Alarm"),
+  ]
+}
+
+const seedDrawingSets = (projects: ProcoreProject[]) => {
+  const rng = mulberry32(8675309)
+  const byProject: Record<number, ProcoreDrawingSet[]> = {}
+
+  for (const p of projects) {
+    const baseId = Number(`77${String(p.id).slice(-3)}`)
+    const isPrecon = normalize(p.status ?? "").includes("preconstruction")
+    const names = isPrecon ? ["Issued for Bid", "Permit Set"] : ["IFC Set", "Bulletin / Addendum"]
+    byProject[p.id] = names.map((name, idx) => ({
+      id: baseId + idx + 1,
+      name,
+      created_at: toIso(daysAgo(90 + Math.floor(rng() * 40))),
+      updated_at: toIso(daysAgo(Math.floor(rng() * 6))),
+    }))
+  }
+
+  return byProject
+}
+
+const seedDrawingUploads = (projects: ProcoreProject[], drawingSetsByProjectId: Record<number, ProcoreDrawingSet[]>) => {
+  const rng = mulberry32(24680)
+  const byProject: Record<number, ProcoreDrawingUpload[]> = {}
+  let id = 2000
+
+  for (const p of projects) {
+    const sets = drawingSetsByProjectId[p.id] ?? []
+    const count = 1 + Math.floor(rng() * 3)
+    const items: ProcoreDrawingUpload[] = []
+    for (let i = 0; i < count; i += 1) {
+      id += 1
+      const set = sets.length ? pick(rng, sets) : null
+      const sheets = 6 + Math.floor(rng() * 14)
+      const pages = sheets * (2 + Math.floor(rng() * 3))
+      items.push({
+        id,
+        filename: `${p.project_number ?? `PRJ-${p.id}`}_Drawings_${i + 1}.pdf`,
+        drawing_set_id: set?.id ?? null,
+        status: rng() > 0.12 ? "complete" : "processing",
+        sheet_count: sheets,
+        page_count: pages,
+        created_at: toIso(daysAgo(12 + Math.floor(rng() * 18))),
+        updated_at: toIso(daysAgo(Math.floor(rng() * 5))),
+      })
+    }
+    byProject[p.id] = items.sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+  }
+
+  return { byProject, nextId: id + 1 }
+}
+
+const seedBidPackageDocuments = (
+  projects: ProcoreProject[],
+  documentsByProjectId: Record<number, ProcoreDocumentEntry[]>,
+  bidPackagesByProjectId: Record<number, ProcoreBidPackage[]>,
+) => {
+  const rng = mulberry32(606060)
+  const byProject: Record<number, Record<number, ProcoreDocumentEntry[]>> = {}
+
+  const attachmentTemplates = [
+    { prefix: "Scope_Narrative", ext: "pdf" },
+    { prefix: "Bid_Form", ext: "xlsx" },
+    { prefix: "Addendum_1", ext: "pdf" },
+    { prefix: "Specs_Excerpt", ext: "pdf" },
+  ]
+
+  for (const p of projects) {
+    const docs = [...(documentsByProjectId[p.id] ?? [])]
+    const bidPackagesFolder = docs.find((d) => d.document_type === "folder" && d.path === "Preconstruction/Bid Packages") ?? null
+    const packages = bidPackagesByProjectId[p.id] ?? []
+    const mapping: Record<number, ProcoreDocumentEntry[]> = {}
+
+    if (!bidPackagesFolder || packages.length === 0) {
+      byProject[p.id] = mapping
+      continue
+    }
+
+    let nextId = docs.reduce((acc, d) => Math.max(acc, d.id), 0)
+
+    for (const bp of packages) {
+      const countRoll = rng()
+      const count = countRoll < 0.25 ? 1 : countRoll < 0.75 ? 2 : 3
+      const picked = Array.from({ length: count }).map(() => pick(rng, attachmentTemplates))
+      const attachments: ProcoreDocumentEntry[] = []
+
+      for (const t of picked) {
+        nextId += 1
+        const name = `${t.prefix}_${bp.id}.${t.ext}`
+        const created_at = toIso(daysAgo(12 + Math.floor(rng() * 28)))
+        const updated_at = toIso(daysAgo(Math.floor(rng() * 6)))
+        const entry: ProcoreDocumentEntry = {
+          id: nextId,
+          name,
+          document_type: "file",
+          parent_id: bidPackagesFolder.id,
+          path: `Preconstruction/Bid Packages/${name}`,
+          created_at,
+          updated_at,
+        }
+        docs.push(entry)
+        attachments.push(entry)
+      }
+
+      mapping[bp.id] = attachments
+    }
+
+    documentsByProjectId[p.id] = docs
+    byProject[p.id] = mapping
+  }
+
+  return byProject
+}
+
+const seedBidPackageBids = (
+  projects: ProcoreProject[],
+  vendorIdsByProjectId: Record<number, number[]>,
+  bidPackagesByProjectId: Record<number, ProcoreBidPackage[]>,
+) => {
+  const rng = mulberry32(505050)
+  const byProject: Record<number, Record<number, ProcoreBid[]>> = {}
+  let id = 3000
+
+  for (const p of projects) {
+    const vendorIds = vendorIdsByProjectId[p.id] ?? []
+    const packages = bidPackagesByProjectId[p.id] ?? []
+    const mapping: Record<number, ProcoreBid[]> = {}
+
+    for (const bp of packages) {
+      const count = Math.min(vendorIds.length, 2 + Math.floor(rng() * 4)) // 2–5
+      const picked = new Set<number>()
+      while (picked.size < count && vendorIds.length) {
+        picked.add(pick(rng, vendorIds))
+      }
+
+      const bids: ProcoreBid[] = []
+      for (const vendor_id of picked) {
+        id += 1
+        const submitted = rng() > 0.55
+        const baseAmount = 85_000 + rng() * 640_000
+        bids.push({
+          id,
+          bid_package_id: bp.id,
+          vendor_id,
+          submitted,
+          lump_sum_amount: submitted ? Math.round(baseAmount) : null,
+          bidder_comments: submitted ? "Included standard exclusions and clarifications." : "Invitation acknowledged.",
+          is_bidder_committed: rng() > 0.8,
+          created_at: toIso(daysAgo(8 + Math.floor(rng() * 10))),
+          updated_at: toIso(daysAgo(Math.floor(rng() * 4))),
+        })
+      }
+
+      mapping[bp.id] = bids.sort((a, b) => (a.updated_at ?? "") < (b.updated_at ?? "") ? 1 : -1)
+    }
+
+    byProject[p.id] = mapping
+  }
+
+  return { byProject, nextId: id + 1 }
+}
+
 const seedDb = (): MockDb => {
   const projects = seedProjects()
   const { vendors } = seedVendors()
   const bidPackagesByProjectId = seedBidPackages(projects)
   const documentsByProjectId = seedDocuments(projects)
   const syncSeed = seedSyncLogs(projects)
+  const appConfig = seedAppConfig(projects)
+  const costCodes = seedCostCodes()
+  const drawingSetsByProjectId = seedDrawingSets(projects)
+  const drawingUploadSeed = seedDrawingUploads(projects, drawingSetsByProjectId)
 
   const rng = mulberry32(424242)
   const vendorIdsByProjectId: Record<number, number[]> = {}
@@ -562,16 +831,25 @@ const seedDb = (): MockDb => {
     vendorIdsByProjectId[p.id] = Array.from(ids)
   }
 
+  const bidPackageDocumentsByProjectId = seedBidPackageDocuments(projects, documentsByProjectId, bidPackagesByProjectId)
+  const bidSeed = seedBidPackageBids(projects, vendorIdsByProjectId, bidPackagesByProjectId)
+
   return {
     company: { id: COMPANY_ID, name: COMPANY_NAME },
+    appConfig,
     projects,
     vendors,
+    costCodes,
     vendorIdsByProjectId,
     bidPackagesByProjectId,
+    bidsByProjectId: bidSeed.byProject,
+    bidPackageDocumentsByProjectId,
     documentsByProjectId,
+    drawingSetsByProjectId,
+    drawingUploadsByProjectId: drawingUploadSeed.byProject,
     syncLogsByProjectId: syncSeed.byProject,
     uploadsByUuid: {},
-    counters: { syncLogId: syncSeed.nextId, uploadCounter: 0 },
+    counters: { syncLogId: syncSeed.nextId, uploadCounter: 0, drawingUploadId: drawingUploadSeed.nextId, bidId: bidSeed.nextId },
   }
 }
 
@@ -705,6 +983,19 @@ export function listProjectBidPackages(projectId: number, options: ListOptions =
   return paginate(filtered, page, per_page)
 }
 
+export function listBidPackageBids(projectId: number, bidPackageId: number, options: ListOptions = {}): ProcorePaginatedResponse<ProcoreBid> {
+  const page = clampInt(options.page, 1)
+  const per_page = clampInt(options.per_page, DEFAULT_PER_PAGE)
+  const bidsByPackage = db.bidsByProjectId[projectId] ?? {}
+  const bids = bidsByPackage[bidPackageId] ?? []
+  return paginate(bids, page, per_page)
+}
+
+export function listBidPackageDocuments(projectId: number, bidPackageId: number): ProcoreDocumentEntry[] {
+  const docsByPackage = db.bidPackageDocumentsByProjectId[projectId] ?? {}
+  return docsByPackage[bidPackageId] ?? []
+}
+
 export function listProjectDocuments(projectId: number, options: ListOptions = {}): ProcorePaginatedResponse<ProcoreDocumentEntry> {
   const page = clampInt(options.page, 1)
   const per_page = clampInt(options.per_page, DEFAULT_PER_PAGE)
@@ -730,9 +1021,76 @@ export function listProjectDocuments(projectId: number, options: ListOptions = {
   return paginate(sorted.map((d) => viewDocument(d, view)), page, per_page)
 }
 
+export function listProjectCostCodes(projectId: number, options: ListOptions = {}): ProcorePaginatedResponse<ProcoreCostCode> {
+  const page = clampInt(options.page, 1)
+  const per_page = clampInt(options.per_page, DEFAULT_PER_PAGE)
+  const search = options.filters?.["search"] as string | undefined
+
+  const filtered = db.costCodes
+    .filter((c) => includesSearch(`${c.full_code} ${c.name}`, search))
+    .sort((a, b) => a.full_code.localeCompare(b.full_code))
+
+  return paginate(filtered, page, per_page)
+}
+
+export function listProjectDrawingSets(projectId: number, options: ListOptions = {}): ProcorePaginatedResponse<ProcoreDrawingSet> {
+  const page = clampInt(options.page, 1)
+  const per_page = clampInt(options.per_page, DEFAULT_PER_PAGE)
+  const search = options.filters?.["search"] as string | undefined
+  const sets = db.drawingSetsByProjectId[projectId] ?? []
+  const filtered = sets.filter((s) => includesSearch(`${s.name}`, search)).sort((a, b) => a.name.localeCompare(b.name))
+  return paginate(filtered, page, per_page)
+}
+
+export function listProjectDrawingUploads(projectId: number, options: ListOptions = {}): ProcorePaginatedResponse<ProcoreDrawingUpload> {
+  const page = clampInt(options.page, 1)
+  const per_page = clampInt(options.per_page, DEFAULT_PER_PAGE)
+  const search = options.filters?.["search"] as string | undefined
+  const uploads = db.drawingUploadsByProjectId[projectId] ?? []
+  const filtered = uploads
+    .filter((u) => includesSearch(`${u.filename} ${u.status}`, search))
+    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+  return paginate(filtered, page, per_page)
+}
+
+const nextDrawingUploadId = () => {
+  db.counters.drawingUploadId += 1
+  return db.counters.drawingUploadId
+}
+
+export function createDrawingUpload(projectId: number, params: { filename: string; drawing_set_id?: number | null; sheet_count?: number; page_count?: number }) {
+  const now = toIso(new Date())
+  const upload: ProcoreDrawingUpload = {
+    id: nextDrawingUploadId(),
+    filename: params.filename,
+    drawing_set_id: params.drawing_set_id ?? null,
+    status: "processing",
+    sheet_count: params.sheet_count,
+    page_count: params.page_count,
+    created_at: now,
+    updated_at: now,
+  }
+
+  const prev = db.drawingUploadsByProjectId[projectId] ?? []
+  db.drawingUploadsByProjectId[projectId] = [upload, ...prev]
+
+  appendSyncLog(projectId, {
+    type: "drawing_upload",
+    status: "info",
+    message: `Drawing upload created: ${params.filename}`,
+  })
+
+  return upload
+}
+
 const nextSyncLogId = () => {
   db.counters.syncLogId += 1
   return db.counters.syncLogId
+}
+
+const nextBidId = () => {
+  db.counters.bidId += 1
+  return db.counters.bidId
 }
 
 export function appendSyncLog(projectId: number, entry: Omit<SyncLogEntry, "id" | "project_id" | "created_at"> & { created_at?: string }) {
@@ -776,6 +1134,42 @@ export function addBidders(input: AddBiddersInput) {
     message: `Added ${vendorIds.length} bidder(s) to “${target.title}”.`,
   })
 
+  const bidsByProject = db.bidsByProjectId[projectId] ?? {}
+  const existingBids = bidsByProject[bidPackageId] ?? []
+  const existingVendorIds = new Set(existingBids.map((b) => b.vendor_id))
+  const newBids: ProcoreBid[] = []
+  for (const vendor_id of vendorIds) {
+    if (existingVendorIds.has(vendor_id)) continue
+    newBids.push({
+      id: nextBidId(),
+      bid_package_id: bidPackageId,
+      vendor_id,
+      submitted: false,
+      lump_sum_amount: null,
+      bidder_comments: notes ?? "",
+      is_bidder_committed: false,
+      created_at: now,
+      updated_at: now,
+    })
+  }
+  db.bidsByProjectId[projectId] = {
+    ...bidsByProject,
+    [bidPackageId]: [...newBids, ...existingBids].sort((a, b) => (a.updated_at ?? "") < (b.updated_at ?? "") ? 1 : -1),
+  }
+
+  const dateTag = now.slice(0, 10)
+  const doc = createProjectDocument(projectId, {
+    folder_path: "Preconstruction/Bid Packages",
+    name: `Bid_Invite_List_${bidPackageId}_${dateTag}.xlsx`,
+  })
+  if (doc) {
+    appendSyncLog(projectId, {
+      type: "documents_upload",
+      status: "info",
+      message: `Saved to Documents: ${doc.path}`,
+    })
+  }
+
   return {
     ok: true as const,
     project_id: projectId,
@@ -789,6 +1183,84 @@ export function addBidders(input: AddBiddersInput) {
 const makeUuid = (n: number) => {
   const hex = n.toString(16).padStart(8, "0")
   return `mock-${hex}-bannett-${hex}`
+}
+
+const nextDocumentId = (projectId: number) => {
+  const docs = db.documentsByProjectId[projectId] ?? []
+  const max = docs.reduce((acc, d) => Math.max(acc, d.id), 0)
+  return max + 1
+}
+
+const normalizeName = (value: string) => value.trim().toLowerCase()
+
+const findFolder = (projectId: number, parentId: number | null, name: string) => {
+  const docs = db.documentsByProjectId[projectId] ?? []
+  const target = normalizeName(name)
+  return (
+    docs.find(
+      (d) => d.document_type === "folder" && (d.parent_id ?? null) === parentId && normalizeName(d.name) === target,
+    ) ?? null
+  )
+}
+
+const createFolder = (projectId: number, parentId: number | null, name: string, path: string) => {
+  const id = nextDocumentId(projectId)
+  const now = toIso(new Date())
+  const folder: ProcoreDocumentEntry = {
+    id,
+    name,
+    document_type: "folder",
+    parent_id: parentId,
+    path,
+    created_at: now,
+    updated_at: now,
+  }
+  db.documentsByProjectId[projectId] = [...(db.documentsByProjectId[projectId] ?? []), folder]
+  return folder
+}
+
+const ensureFolderPath = (projectId: number, folderPath: string) => {
+  const parts = folderPath
+    .split("/")
+    .map((p) => p.trim())
+    .filter(Boolean)
+  if (!parts.length) return null
+
+  let parentId: number | null = null
+  let currentPath = ""
+
+  for (const part of parts) {
+    currentPath = currentPath ? `${currentPath}/${part}` : part
+    const existing = findFolder(projectId, parentId, part)
+    if (existing) {
+      parentId = existing.id
+      continue
+    }
+    const created = createFolder(projectId, parentId, part, currentPath)
+    parentId = created.id
+  }
+
+  return parentId
+}
+
+export function createProjectDocument(projectId: number, params: { folder_path: string; name: string }) {
+  const folderId = ensureFolderPath(projectId, params.folder_path)
+  if (!folderId) return null
+
+  const id = nextDocumentId(projectId)
+  const now = toIso(new Date())
+  const entry: ProcoreDocumentEntry = {
+    id,
+    name: params.name,
+    document_type: "file",
+    parent_id: folderId,
+    path: `${params.folder_path}/${params.name}`.replace(/\/{2,}/g, "/"),
+    created_at: now,
+    updated_at: now,
+  }
+
+  db.documentsByProjectId[projectId] = [...(db.documentsByProjectId[projectId] ?? []), entry]
+  return entry
 }
 
 export function createUpload(params: { projectId?: number; companyId?: number; filename: string; contentType: string; size: number }): ProcoreUpload {
@@ -810,19 +1282,35 @@ export function createUpload(params: { projectId?: number; companyId?: number; f
 
   db.uploadsByUuid[uuid] = upload
 
-  if (params.projectId) {
-    appendSyncLog(params.projectId, {
-      type: "documents_upload",
-      status: "info",
-      message: `Prepared upload for “${params.filename}”.`,
-    })
-  }
-
   return upload
 }
 
 export function getCompany() {
   return db.company
+}
+
+export function getAppConfig() {
+  return db.appConfig
+}
+
+export function isAppEnabledForProject(projectId: number) {
+  return db.appConfig.enabled_project_ids.includes(projectId)
+}
+
+export function enableAppForProject(projectId: number) {
+  if (!db.appConfig.enabled_project_ids.includes(projectId)) {
+    db.appConfig.enabled_project_ids = [...db.appConfig.enabled_project_ids, projectId]
+    db.appConfig.updated_at = toIso(new Date())
+  }
+  return db.appConfig
+}
+
+export function disableAppForProject(projectId: number) {
+  if (db.appConfig.enabled_project_ids.includes(projectId)) {
+    db.appConfig.enabled_project_ids = db.appConfig.enabled_project_ids.filter((id) => id !== projectId)
+    db.appConfig.updated_at = toIso(new Date())
+  }
+  return db.appConfig
 }
 
 export function getProjectById(projectId: number) {

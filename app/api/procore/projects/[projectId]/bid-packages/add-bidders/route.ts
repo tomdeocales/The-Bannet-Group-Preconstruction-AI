@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { procoreRequest } from "@/lib/procoreClient"
-import { addBidders, appendSyncLog } from "@/lib/procore/mockStore"
+import { addBidders, appendSyncLog, isAppEnabledForProject } from "@/lib/procore/mockStore"
 
 type AddBiddersBody = {
   bidPackageId: number
@@ -29,6 +29,12 @@ export async function POST(
   }
 
   if (procoreMode === "mock") {
+    if (!isAppEnabledForProject(project_id)) {
+      return NextResponse.json(
+        { error: "App is not configured for this project. Ask a Procore Company Admin to enable it." },
+        { status: 403 },
+      )
+    }
     const result = addBidders({ projectId: project_id, bidPackageId, vendorIds, notes })
     if (!result.ok) {
       return NextResponse.json({ ok: false, error: result.error }, { status: 404 })

@@ -12,13 +12,22 @@ import { HelpSupport } from "@/components/help-support"
 import { Login } from "@/components/login"
 import { Toaster } from "@/components/ui/sonner"
 import { getProjects } from "@/lib/procore/client"
+import { useProcoreEmbedContext } from "@/hooks/use-procore-embed-context"
 import type { ProcoreProject } from "@/lib/procore/types"
 
-export type ModuleType = "dashboard" | "estimator" | "subcontractor" | "zoning" | "procore" | "settings" | "help"
+export type ModuleType =
+  | "dashboard"
+  | "estimator"
+  | "subcontractor"
+  | "zoning"
+  | "procore"
+  | "settings"
+  | "help"
 
 const DEFAULT_PROJECT: ProcoreProject = { id: 124512, name: "Riverside Medical Center", display_name: "Riverside Medical Center" }
 
 export default function Home() {
+  const embed = useProcoreEmbedContext()
   const [activeModule, setActiveModule] = useState<ModuleType>("dashboard")
   const [selectedProject, setSelectedProject] = useState<ProcoreProject>(DEFAULT_PROJECT)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -27,21 +36,32 @@ export default function Home() {
   const [procoreConnected, setProcoreConnected] = useState(true)
 
   useEffect(() => {
+    if (embed.embedded) {
+      setIsAuthenticated(true)
+      return
+    }
+
     if (typeof window !== "undefined") {
       const stored = window.localStorage.getItem("bannett-precon-auth")
       if (stored === "true") {
         setIsAuthenticated(true)
       }
     }
-  }, [])
+  }, [embed.embedded])
 
   useEffect(() => {
     if (!isAuthenticated) return
 
     let preferredProjectId = DEFAULT_PROJECT.id
 
+    const embeddedProjectId = embed.context?.project_id
+    if (embed.embedded && typeof embeddedProjectId === "number") {
+      preferredProjectId = embeddedProjectId
+      setSelectedProject({ id: embeddedProjectId, name: "Project" })
+    }
+
     const storedProject = typeof window !== "undefined" ? window.localStorage.getItem("bannett-selected-project") : null
-    if (storedProject) {
+    if (storedProject && !embed.embedded) {
       try {
         const parsed = JSON.parse(storedProject) as { id?: number; name?: string }
         if (typeof parsed.id === "number" && parsed.id > 0) {
@@ -64,7 +84,7 @@ export default function Home() {
         const match = res.items.find((p) => p.id === preferredProjectId) ?? res.items[0]
         if (match) {
           setSelectedProject(match)
-          if (typeof window !== "undefined") {
+          if (typeof window !== "undefined" && !embed.embedded) {
             window.localStorage.setItem("bannett-selected-project", JSON.stringify({ id: match.id, name: match.name }))
           }
         }
@@ -83,7 +103,27 @@ export default function Home() {
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated])
+  }, [isAuthenticated, embed.embedded, embed.context?.project_id])
+
+  useEffect(() => {
+    if (!embed.embedded) return
+    const view = embed.context?.view?.toLowerCase()
+    if (!view) return
+    if (activeModule !== "dashboard") return
+
+    if (view.includes("drawing")) {
+      setActiveModule("estimator")
+      return
+    }
+    if (view.includes("planroom") || view.includes("bid")) {
+      setActiveModule("subcontractor")
+      return
+    }
+    if (view.includes("document")) {
+      setActiveModule("procore")
+      return
+    }
+  }, [embed.embedded, embed.context?.view, activeModule])
 
   const handleLogin = (email: string, password: string) => {
     // Accept any non-empty credentials for mock sign-in
@@ -98,13 +138,14 @@ export default function Home() {
   }
 
   const handleLogout = () => {
+    if (embed.embedded) return
     setIsAuthenticated(false)
     if (typeof window !== "undefined") {
       window.localStorage.removeItem("bannett-precon-auth")
     }
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !embed.embedded) {
     return <Login onLogin={handleLogin} />
   }
 

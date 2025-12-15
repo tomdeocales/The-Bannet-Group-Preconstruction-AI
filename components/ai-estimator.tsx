@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useCallback } from "react"
+import React, { useEffect, useMemo, useState, useCallback } from "react"
 import {
   Upload,
   FileText,
@@ -48,7 +48,9 @@ import {
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import type { ModuleType } from "@/app/page"
-import type { ProcoreProject } from "@/lib/procore/types"
+import { ProcoreDocumentPickerDialog } from "@/components/procore-document-picker-dialog"
+import { getCostCodes, postDrawingUpload, postProjectExport } from "@/lib/procore/client"
+import type { ProcoreCostCode, ProcoreEstimateDestination, ProcoreProject } from "@/lib/procore/types"
 
 interface AIEstimatorProps {
   selectedProject: ProcoreProject
@@ -218,10 +220,10 @@ const estimateData = [
 ]
 
 const initialCostCodeMappings = [
-  { category: "03 - Concrete", costCode: "03-CONC-001" },
-  { category: "05 - Metals", costCode: "05-STEEL-001" },
-  { category: "08 - Openings", costCode: "08-OPEN-001" },
-  { category: "26 - Electrical", costCode: "26-ELEC-001" },
+  { category: "03 - Concrete", costCode: "03 30 00" },
+  { category: "05 - Metals", costCode: "05 12 00" },
+  { category: "08 - Openings", costCode: "08 11 13" },
+  { category: "26 - Electrical", costCode: "26 51 00" },
 ]
 
 export function AIEstimator({ selectedProject, onLogout, setActiveModule }: AIEstimatorProps) {
@@ -265,11 +267,41 @@ export function AIEstimator({ selectedProject, onLogout, setActiveModule }: AIEs
   const [costCodeMappings, setCostCodeMappings] = useState(initialCostCodeMappings)
   const [editMappingOpen, setEditMappingOpen] = useState(false)
   const [mappingDraft, setMappingDraft] = useState<{ category: string; costCode: string } | null>(null)
+  const [isApproving, setIsApproving] = useState(false)
+  const [pushDialogOpen, setPushDialogOpen] = useState(false)
+  const [pushDestination, setPushDestination] = useState<ProcoreEstimateDestination>("budget")
+  const [exportPickerOpen, setExportPickerOpen] = useState(false)
+  const [lastExportPath, setLastExportPath] = useState<string | null>(null)
+  const [lastPushDestination, setLastPushDestination] = useState<ProcoreEstimateDestination | null>(null)
+  const [costCodes, setCostCodes] = useState<ProcoreCostCode[]>([])
+  const [costCodesLoading, setCostCodesLoading] = useState(false)
   const [checklist, setChecklist] = useState({
     quantities: false,
     costCodes: false,
     missingItems: false,
   })
+
+  useEffect(() => {
+    if (!editMappingOpen && !pushDialogOpen) return
+    let cancelled = false
+    setCostCodesLoading(true)
+    getCostCodes(selectedProject.id, { page: 1, per_page: 200 })
+      .then((res) => {
+        if (cancelled) return
+        setCostCodes(res.items)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setCostCodes([])
+      })
+      .finally(() => {
+        if (cancelled) return
+        setCostCodesLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [editMappingOpen, pushDialogOpen, selectedProject.id])
   const [successModalOpen, setSuccessModalOpen] = useState(false)
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -326,6 +358,13 @@ export function AIEstimator({ selectedProject, onLogout, setActiveModule }: AIEs
 	    setPanStart(null)
 	    setViewerLayers({ detections: true, annotations: true, grid: true })
 	    setSelectedCategory("Walls")
+
+    const dateTag = new Date().toISOString().slice(0, 10)
+    const uploadFilename = `${(selectedProject.project_number ?? `PRJ-${selectedProject.id}`).replace(/\s+/g, "-")}_Drawings_${dateTag}.pdf`
+    const pageCount = uploadedSheets.reduce((acc, s) => acc + (s.pages ?? 0), 0)
+    void postDrawingUpload(selectedProject.id, { filename: uploadFilename, sheet_count: uploadedSheets.length, page_count: pageCount }).catch(() => {
+      // ignore (mock mode will record a sync log entry)
+    })
 
     const interval = setInterval(() => {
       setParsingProgress((prev) => {
@@ -468,6 +507,7 @@ export function AIEstimator({ selectedProject, onLogout, setActiveModule }: AIEs
     (acc, cat) => acc + cat.items.reduce((itemAcc, item) => itemAcc + item.total, 0),
     0,
   )
+  const lineItemCount = estimates.reduce((acc, cat) => acc + cat.items.length, 0)
 
   const csiCategoryOptions = Array.from(
     new Set([
@@ -491,13 +531,63 @@ export function AIEstimator({ selectedProject, onLogout, setActiveModule }: AIEs
       ? null
       : estimates.flatMap((c) => c.items).find((i) => i.id === notesOpen) ?? null
 
-  const handleApprove = () => {
+  const handleApprove = async (folder_path: string, destination: ProcoreEstimateDestination) => {
+    const dateTag = new Date().toISOString().slice(0, 10)
+    const filename = `Estimate_Final_${(selectedProject.project_number ?? `PRJ-${selectedProject.id}`).replace(/\s+/g, "-")}_${dateTag}.xlsx`
+
+    setIsApproving(true)
+    try {
+      const res = await postProjectExport(selectedProject.id, "estimate", {
+        filename,
+        folder_path,
+        content_type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        destination,
+      })
+
+      if ("ok" in res && res.ok) {
+        const path = res.document?.path ?? null
+        setLastExportPath(path)
+        setLastPushDestination(destination)
+        toast.success("Estimate exported", { description: path ?? res.note ?? "Upload created in Procore." })
+        setSuccessModalOpen(true)
+      }
+    } catch (err) {
+      setLastExportPath(null)
+      setLastPushDestination(null)
+      toast.error("Export failed", { description: (err as Error).message })
+    } finally {
+      setIsApproving(false)
+    }
+  }
+
+  const requestApprove = () => {
+    if (isApproving) return
     if (!checklist.quantities || !checklist.costCodes || !checklist.missingItems) {
-      toast.error("Please complete all checklist items before approving")
+      toast.error("Checklist incomplete", { description: "Complete Quantities, Cost Codes, and Missing Items before approving." })
       return
     }
-    setSuccessModalOpen(true)
+    setPushDialogOpen(true)
   }
+
+  const destinationCopy: Record<ProcoreEstimateDestination, { label: string; detail: string }> = {
+    budget: { label: "Budget", detail: "Creates/updates budget line items mapped to cost codes." },
+    commitments: { label: "Commitments", detail: "Prepares commitment scaffolding for shortlisted subs (mock)." },
+    prime_contract: { label: "Prime Contract", detail: "Stages a prime contract/SOV export for review (mock)." },
+    sov: { label: "Schedule of Values", detail: "Creates an SOV-style rollup by cost code (mock)." },
+  }
+
+  const costCodeSet = useMemo(() => new Set(costCodes.map((c) => c.full_code)), [costCodes])
+  const mappingChecks = useMemo(() => {
+    const ready = costCodes.length > 0 && !costCodesLoading
+    return costCodeMappings.map((m) => ({
+      ...m,
+      status: !ready ? ("unknown" as const) : costCodeSet.has(m.costCode) ? ("valid" as const) : ("invalid" as const),
+    }))
+  }, [costCodes.length, costCodesLoading, costCodeMappings, costCodeSet])
+
+  const hasInvalidMappings = mappingChecks.some((m) => m.status === "invalid")
+  const canProceedWithPush = !costCodesLoading && costCodes.length > 0 && !hasInvalidMappings
+  const firstInvalidMapping = mappingChecks.find((m) => m.status === "invalid") ?? null
 
   return (
     <div className="pt-0 pr-0 pb-1 pl-0 space-y-2 h-full flex flex-col min-h-0">
@@ -1493,8 +1583,34 @@ export function AIEstimator({ selectedProject, onLogout, setActiveModule }: AIEs
                               prev ? { ...prev, costCode: e.target.value.toUpperCase() } : prev,
                             )
                           }
-                          placeholder="e.g., 26-ELEC-001"
+                          placeholder="e.g., 26 51 00"
                         />
+                        <Select
+                          value={
+                            costCodes.some((c) => c.full_code === mappingDraft.costCode)
+                              ? mappingDraft.costCode
+                              : undefined
+                          }
+                          onValueChange={(value) =>
+                            setMappingDraft((prev) => (prev ? { ...prev, costCode: value } : prev))
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue
+                              placeholder={costCodesLoading ? "Loading Procore cost codes…" : "Choose from Procore cost codes"}
+                            />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-60 overflow-y-auto">
+                            {costCodes.map((code) => (
+                              <SelectItem key={code.id} value={code.full_code}>
+                                {code.full_code} — {code.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          Select list is derived from Procore cost codes for this project.
+                        </p>
                       </div>
                       <div className="p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground">
                         Mapping updates apply to sync and reporting. Use a consistent cost code format across divisions.
@@ -1579,21 +1695,179 @@ export function AIEstimator({ selectedProject, onLogout, setActiveModule }: AIEs
                 </div>
               </div>
 
-              <Button onClick={handleApprove} className="w-full bg-bannett-navy hover:bg-bannett-navy/90">
-                <Check className="w-4 h-4 mr-2" />
-                Approve Estimate
-              </Button>
+	              <Button onClick={requestApprove} className="w-full bg-bannett-navy hover:bg-bannett-navy/90" disabled={isApproving}>
+	                {isApproving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
+	                {isApproving ? "Exporting to Procore…" : "Approve Estimate"}
+	              </Button>
             </CardContent>
           </Card>
         </div>
       )}
 
-        </CardContent>
-      </Card>
+		      </CardContent>
+		    </Card>
 
-      {/* Sheet Preview */}
-      <Dialog open={!!previewSheet} onOpenChange={(open) => !open && setPreviewSheet(null)}>
-        <DialogContent>
+		    <Dialog open={pushDialogOpen} onOpenChange={setPushDialogOpen}>
+		      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+		        <DialogHeader>
+		          <DialogTitle>Push estimate to Procore</DialogTitle>
+		        </DialogHeader>
+
+		        <div className="space-y-6">
+		          <div className="p-4 rounded-lg bg-muted/50">
+		            <p className="text-sm font-medium text-card-foreground">Push destination</p>
+		            <p className="text-xs text-muted-foreground mt-1">
+		              Select where the approved estimate should land in Procore (mocked until scopes are validated).
+		            </p>
+		            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+		              <div className="space-y-2">
+		                <p className="text-xs text-muted-foreground">Destination</p>
+		                <Select
+		                  value={pushDestination}
+		                  onValueChange={(v) => setPushDestination(v as ProcoreEstimateDestination)}
+		                >
+		                  <SelectTrigger className="w-full">
+		                    <SelectValue />
+		                  </SelectTrigger>
+		                  <SelectContent className="max-h-60 overflow-y-auto z-[100]">
+		                    <SelectItem value="budget">Budget</SelectItem>
+		                    <SelectItem value="commitments">Commitments</SelectItem>
+		                    <SelectItem value="prime_contract">Prime Contract</SelectItem>
+		                    <SelectItem value="sov">Schedule of Values</SelectItem>
+		                  </SelectContent>
+		                </Select>
+		              </div>
+		              <div className="p-4 rounded-lg bg-background border border-border">
+		                <p className="text-xs text-muted-foreground">What will be created/updated</p>
+		                <p className="text-sm font-medium text-card-foreground mt-1">{destinationCopy[pushDestination].detail}</p>
+		              </div>
+		            </div>
+		          </div>
+
+		          <div className="space-y-2">
+		            <p className="text-sm font-medium text-card-foreground">Cost code validation</p>
+		            <p className="text-xs text-muted-foreground">
+		              Validates mappings against project cost codes (GET /rest/v1.0/cost_codes?project_id=:project_id).
+		            </p>
+		            <div className="border rounded-lg overflow-hidden">
+		              <table className="w-full text-sm">
+		                <thead className="bg-muted/50">
+		                  <tr>
+		                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">Category</th>
+		                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">Cost code</th>
+		                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">Status</th>
+		                  </tr>
+		                </thead>
+		                <tbody>
+		                  {mappingChecks.map((m) => (
+		                    <tr key={m.category} className="border-t">
+		                      <td className="p-3 text-card-foreground">{m.category}</td>
+		                      <td className="p-3 text-card-foreground">{m.costCode}</td>
+		                      <td className="p-3">
+		                        {m.status === "valid" ? (
+		                          <Badge className="bg-success text-primary-foreground">Validated</Badge>
+		                        ) : m.status === "invalid" ? (
+		                          <Badge className="bg-destructive text-primary-foreground">Not found</Badge>
+		                        ) : (
+		                          <Badge variant="secondary">Pending</Badge>
+		                        )}
+		                      </td>
+		                    </tr>
+		                  ))}
+		                </tbody>
+		              </table>
+		            </div>
+
+		            {costCodesLoading ? (
+		              <div className="p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground flex items-center gap-2">
+		                <Loader2 className="w-4 h-4 animate-spin" />
+		                Loading project cost codes…
+		              </div>
+		            ) : costCodes.length === 0 ? (
+		              <div className="p-3 rounded-lg bg-warning/10 text-sm text-card-foreground">
+		                Cost codes are unavailable for this project. Connect to Procore (live) or switch to mock mode to
+		                continue.
+		              </div>
+		            ) : hasInvalidMappings ? (
+		              <div className="p-3 rounded-lg bg-warning/10 text-sm text-card-foreground">
+		                One or more mappings are invalid. Fix the cost code mappings before pushing to Procore.
+		              </div>
+		            ) : (
+		              <div className="p-3 rounded-lg bg-bannett-navy/10 text-sm text-card-foreground">
+		                All mappings validated against the project cost code list.
+		              </div>
+		            )}
+		          </div>
+
+		          <div className="p-4 rounded-lg bg-muted/50">
+		            <p className="text-sm font-medium text-card-foreground">Audit record (preview)</p>
+		            <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+		              <div>
+		                <p className="text-xs text-muted-foreground">Estimate total</p>
+		                <p className="font-medium text-card-foreground mt-1">${totalEstimate.toLocaleString()}</p>
+		              </div>
+		              <div>
+		                <p className="text-xs text-muted-foreground">Line items</p>
+		                <p className="font-medium text-card-foreground mt-1">{lineItemCount}</p>
+		              </div>
+		              <div>
+		                <p className="text-xs text-muted-foreground">Prepared by</p>
+		                <p className="font-medium text-card-foreground mt-1">Sarah Chen</p>
+		              </div>
+		            </div>
+		            <p className="text-xs text-muted-foreground mt-3">
+		              Next: choose a destination folder in Procore Documents for the exported estimate file.
+		            </p>
+		          </div>
+		        </div>
+
+		        <DialogFooter className="gap-2">
+		          <Button variant="outline" onClick={() => setPushDialogOpen(false)}>
+		            Cancel
+		          </Button>
+		          {hasInvalidMappings && firstInvalidMapping && (
+		            <Button
+		              variant="outline"
+		              onClick={() => {
+		                setPushDialogOpen(false)
+		                setMappingDraft({ category: firstInvalidMapping.category, costCode: firstInvalidMapping.costCode })
+		                setEditMappingOpen(true)
+		              }}
+		            >
+		              Fix mappings
+		            </Button>
+		          )}
+		          <Button
+		            className="bg-bannett-navy hover:bg-bannett-navy/90"
+		            onClick={() => {
+		              setPushDialogOpen(false)
+		              setExportPickerOpen(true)
+		            }}
+		            disabled={!canProceedWithPush}
+		          >
+		            Choose Documents folder
+		            <ArrowRight className="w-4 h-4 ml-2" />
+		          </Button>
+		        </DialogFooter>
+		      </DialogContent>
+		    </Dialog>
+
+		    <ProcoreDocumentPickerDialog
+		      open={exportPickerOpen}
+		      onOpenChange={setExportPickerOpen}
+		      projectId={selectedProject.id}
+	      title="Save estimate to Procore Documents"
+	      confirmLabel="Export estimate"
+	      initialFolderPath="Preconstruction/Estimates"
+	      onConfirm={async ({ folder_path }) => {
+	        setExportPickerOpen(false)
+	        await handleApprove(folder_path, pushDestination)
+	      }}
+	    />
+
+	      {/* Sheet Preview */}
+	      <Dialog open={!!previewSheet} onOpenChange={(open) => !open && setPreviewSheet(null)}>
+	        <DialogContent>
           <DialogHeader>
             <DialogTitle>Sheet Preview</DialogTitle>
           </DialogHeader>
@@ -1640,9 +1914,13 @@ export function AIEstimator({ selectedProject, onLogout, setActiveModule }: AIEs
           <DialogHeader>
             <DialogTitle className="text-center">Estimate Approved!</DialogTitle>
           </DialogHeader>
-          <p className="text-muted-foreground">
-            Your estimate has been approved and synced to Procore. The project team has been notified.
-          </p>
+	          <p className="text-muted-foreground">
+	            Your estimate has been approved and queued for Procore sync.
+	            {lastPushDestination ? ` Push target: ${destinationCopy[lastPushDestination].label}.` : ""} The project team has been notified.
+	          </p>
+	          {lastExportPath && (
+	            <p className="text-xs text-muted-foreground mt-2">Saved to Documents: {lastExportPath}</p>
+	          )}
           <DialogFooter className="justify-center mt-4">
             <Button
               onClick={() => {
@@ -1675,10 +1953,12 @@ export function AIEstimator({ selectedProject, onLogout, setActiveModule }: AIEs
                 setCostCodeMappings(initialCostCodeMappings)
                 setEditMappingOpen(false)
                 setMappingDraft(null)
-                setChecklist({ quantities: false, costCodes: false, missingItems: false })
-              }}
-              className="bg-bannett-navy hover:bg-bannett-navy/90"
-            >
+	                setLastExportPath(null)
+	                setLastPushDestination(null)
+	                setChecklist({ quantities: false, costCodes: false, missingItems: false })
+	              }}
+	              className="bg-bannett-navy hover:bg-bannett-navy/90"
+	            >
               Start New Estimate
             </Button>
           </DialogFooter>

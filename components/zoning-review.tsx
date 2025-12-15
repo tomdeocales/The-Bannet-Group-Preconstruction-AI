@@ -41,6 +41,8 @@ import {
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import type { ModuleType } from "@/app/page"
+import { ProcoreDocumentPickerDialog } from "@/components/procore-document-picker-dialog"
+import { postProjectExport } from "@/lib/procore/client"
 import type { ProcoreProject } from "@/lib/procore/types"
 
 interface ZoningReviewProps {
@@ -138,6 +140,7 @@ export function ZoningReview({ selectedProject, onLogout, setActiveModule }: Zon
   const [editingItem, setEditingItem] = useState<number | null>(null)
   const [newItemText, setNewItemText] = useState("")
   const [addingItem, setAddingItem] = useState(false)
+  const [savePickerOpen, setSavePickerOpen] = useState(false)
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -216,10 +219,29 @@ export function ZoningReview({ selectedProject, onLogout, setActiveModule }: Zon
     toast.success("Checklist exported to PDF")
   }
 
-  const saveToProcore = () => {
-    toast.success("Saved to Procore Documents", {
-      description: "Zoning review documents have been uploaded to the project folder.",
-    })
+  const saveToProcore = (folder_path: string) => {
+    const dateTag = new Date().toISOString().slice(0, 10)
+    const filename = `Zoning_Summary_${(selectedProject.project_number ?? `PRJ-${selectedProject.id}`).replace(/\s+/g, "-")}_${dateTag}.pdf`
+
+    toast.promise(
+      postProjectExport(selectedProject.id, "zoning", {
+        filename,
+        folder_path,
+        content_type: "application/pdf",
+      }),
+      {
+        loading: "Saving to Procore Documents…",
+        success: (res) => {
+          const path = "ok" in res && res.ok ? res.document?.path : null
+          return path ? `Saved to Documents: ${path}` : "Zoning summary queued for Procore sync."
+        },
+        error: (err) => (err as Error).message || "Unable to save to Procore",
+      },
+    )
+  }
+
+  const requestSaveToProcore = () => {
+    setSavePickerOpen(true)
   }
 
   return (
@@ -722,7 +744,7 @@ export function ZoningReview({ selectedProject, onLogout, setActiveModule }: Zon
                 <Download className="w-4 h-4 mr-2" />
                 Export as PDF
               </Button>
-              <Button onClick={saveToProcore} className="w-full bg-bannett-navy hover:bg-bannett-navy/90">
+              <Button onClick={requestSaveToProcore} className="w-full bg-bannett-navy hover:bg-bannett-navy/90">
                 <Save className="w-4 h-4 mr-2" />
                 Save to Procore Documents
               </Button>
@@ -745,6 +767,19 @@ export function ZoningReview({ selectedProject, onLogout, setActiveModule }: Zon
       )}
         </CardContent>
       </Card>
+
+      <ProcoreDocumentPickerDialog
+        open={savePickerOpen}
+        onOpenChange={setSavePickerOpen}
+        projectId={selectedProject.id}
+        title="Save zoning summary to Procore Documents"
+        confirmLabel="Save zoning summary"
+        initialFolderPath="Preconstruction/Zoning"
+        onConfirm={async ({ folder_path }) => {
+          setSavePickerOpen(false)
+          saveToProcore(folder_path)
+        }}
+      />
     </div>
   )
 }
