@@ -133,7 +133,7 @@ export function HelpSupport({ onLogout, setActiveModule }: HelpSupportProps) {
       </div>
 
       {/* Content */}
-      <Card className="shadow-sm flex-1 min-h-0 p-0 md:p-6">
+      <Card className="flex-1 min-h-0 p-0 md:p-6">
         <CardContent className="p-0 h-full overflow-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
           <div className="px-1 md:px-6 py-0 space-y-8">
 
@@ -147,7 +147,7 @@ export function HelpSupport({ onLogout, setActiveModule }: HelpSupportProps) {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   placeholder="Search for articles, guides, and more..."
-                  className="pl-10 h-12 text-base shadow-sm"
+                  className="pl-10 h-12 text-base"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />

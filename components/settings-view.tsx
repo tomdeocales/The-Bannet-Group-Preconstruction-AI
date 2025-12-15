@@ -112,7 +112,7 @@ export function SettingsView({ onLogout, setActiveModule }: SettingsViewProps) {
       </div>
 
       {/* Content */}
-      <Card className="shadow-sm flex-1 min-h-0 p-0 md:p-6">
+      <Card className="flex-1 min-h-0 p-0 md:p-6">
         <CardContent className="p-0 h-full overflow-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
           <div className="px-1 md:px-6 py-0">
             <Tabs defaultValue="account" className="space-y-6 h-full flex flex-col">

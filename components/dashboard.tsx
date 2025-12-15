@@ -1027,7 +1027,7 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
         </div>
       </div>
 
-      <Card className="shadow-sm flex-1 min-h-0 p-0 md:p-6">
+      <Card className="flex-1 min-h-0 p-0 md:p-6">
         <CardContent className="space-y-6 p-1 md:p-6 h-full overflow-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
           {/* KPI Cards */}
           {isRefreshing ? (
@@ -1047,7 +1047,7 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
               {kpis.map((kpi) => (
                 <Card
                   key={kpi.label}
-                  className="cursor-pointer hover:shadow-md transition-shadow bg-card"
+                  className="cursor-pointer transition-shadow bg-card"
                   onClick={() => setSelectedKpi(kpi)}
                 >
                   <CardContent className="p-3 md:p-5">

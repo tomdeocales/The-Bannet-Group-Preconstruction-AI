@@ -877,7 +877,7 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
         </div>
       </div>
 
-      <Card className="shadow-sm flex-1 min-h-0 p-0 md:p-6">
+      <Card className="flex-1 min-h-0 p-0 md:p-6">
         <CardContent className="p-1 md:p-4 h-full overflow-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
           {workspaceView === "planroom" ? (
             <div className="space-y-6">
