@@ -246,7 +246,7 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
   return (
     <div className="pt-0 pr-0 pb-1 pl-0 space-y-2 h-full flex flex-col min-h-0">
       {/* Header */}
-      <div className="flex items-center justify-between px-6">
+      <div className="flex items-center justify-between px-3 md:px-6">
         <div>
           <h1 className="text-xl md:text-2xl font-semibold text-foreground">Procore Sync</h1>
           <p className="text-sm text-muted-foreground">{projectKey}</p>
@@ -291,7 +291,7 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
                     <div className="w-9 h-9 rounded-full bg-bannett-navy flex items-center justify-center">
                       <User className="w-5 h-5 text-primary-foreground" />
                     </div>
-                    <div className="text-left">
+                    <div className="hidden md:block text-left">
                       <p className="text-sm font-medium text-foreground leading-tight">Sarah Chen</p>
                       <p className="text-xs text-muted-foreground leading-tight">Project Manager</p>
                     </div>
@@ -309,616 +309,617 @@ export function ProcoreSync({ selectedProject, onLogout, setActiveModule }: Proc
         </div>
       </div>
 
-      <Card className="shadow-sm flex-1 min-h-0">
-        <CardContent className="p-6 h-full overflow-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
-      <Tabs defaultValue="status" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="status">Connection Status</TabsTrigger>
-          <TabsTrigger value="mapping">Field Mapping</TabsTrigger>
-          <TabsTrigger value="logs">Sync Logs</TabsTrigger>
-        </TabsList>
+      <Card className="shadow-sm flex-1 min-h-0 p-0 md:p-6">
+        <CardContent className="p-1 md:p-6 h-full overflow-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
+          <Tabs defaultValue="status" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="status">Connection Status</TabsTrigger>
+              <TabsTrigger value="mapping">Field Mapping</TabsTrigger>
+              <TabsTrigger value="logs">Sync Logs</TabsTrigger>
+            </TabsList>
 
-        {/* Connection Status Tab */}
-        <TabsContent value="status" className="space-y-6">
-          <Card className="bg-card">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-card-foreground">Connection Status</CardTitle>
-                <Button variant="ghost" size="icon" onClick={() => setInfoModalOpen(true)}>
-                  <Info className="w-4 h-4" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={cn("w-3 h-3 rounded-full", isConnected ? "bg-success animate-pulse" : "bg-destructive")}
-                  />
-                  <div>
-                    <p className="font-medium text-card-foreground">
-                      {isConnected ? "Connected to Procore" : "Disconnected"}
-                    </p>
-                    <p className="text-sm text-muted-foreground">Last sync: {lastSyncAt}</p>
+            {/* Connection Status Tab */}
+            <TabsContent value="status" className="space-y-6">
+              <Card className="bg-card">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-card-foreground">Connection Status</CardTitle>
+                    <Button variant="ghost" size="icon" onClick={() => setInfoModalOpen(true)}>
+                      <Info className="w-4 h-4" />
+                    </Button>
                   </div>
-                </div>
-                <Badge className={isConnected ? "bg-success text-primary-foreground" : "bg-destructive"}>
-                  {isConnected ? "Active" : "Inactive"}
-                </Badge>
-              </div>
-
-              <div className="flex justify-end">
-                {isConnected ? (
-                  <Button variant="outline" onClick={() => setDisconnectModalOpen(true)} disabled={isSyncing}>
-                    Disconnect
-                  </Button>
-                ) : (
-                  <Button onClick={() => setConnectModalOpen(true)} className="bg-bannett-navy hover:bg-bannett-navy/90">
-                    Connect to Procore
-                  </Button>
-                )}
-              </div>
-
-	              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-	                <div className="p-4 rounded-lg bg-muted/50">
-	                  <div className="flex items-center gap-2 mb-2">
-	                    <FileText className="w-4 h-4 text-bannett-navy" />
-	                    <span className="text-sm font-medium text-card-foreground">Documents</span>
-	                  </div>
-	                  <p className="text-2xl font-semibold text-card-foreground">24</p>
-	                  <p className="text-xs text-muted-foreground">synced this week</p>
-	                </div>
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Calculator className="w-4 h-4 text-bannett-blue" />
-                    <span className="text-sm font-medium text-card-foreground">Estimates</span>
-                  </div>
-                  <p className="text-2xl font-semibold text-card-foreground">3</p>
-                  <p className="text-xs text-muted-foreground">pushed to budget</p>
-                </div>
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Users className="w-4 h-4 text-bannett-light" />
-                    <span className="text-sm font-medium text-card-foreground">Vendors</span>
-                  </div>
-                  <p className="text-2xl font-semibold text-card-foreground">12</p>
-                  <p className="text-xs text-muted-foreground">in directory</p>
-	                </div>
-	              </div>
-
-	              <div className="flex items-center justify-between gap-4 p-4 rounded-lg bg-muted/50">
-	                <div className="space-y-1">
-	                  <p className="text-sm font-medium text-card-foreground">Documents browser</p>
-	                  <p className="text-xs text-muted-foreground">Navigate folders and verify recent exports (mock).</p>
-	                </div>
-	                <Button
-	                  variant="outline"
-	                  onClick={() => setDocumentsBrowserOpen(true)}
-	                  disabled={!isConnected || !canUseAppForProject}
-	                >
-	                  <FileText className="w-4 h-4 mr-2" />
-	                  Browse Documents
-	                </Button>
-	              </div>
-
-	              <div className="flex gap-3">
-	                <Button
-                  onClick={handleSync}
-                  className="bg-bannett-navy hover:bg-bannett-navy/90"
-                  disabled={isSyncing || !isConnected || !canUseAppForProject}
-                >
-                  {isSyncing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Syncing...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Sync Now
-                    </>
-                  )}
-                </Button>
-                <Button variant="outline" onClick={handleReauthorize} disabled={isSyncing || !canUseAppForProject}>
-                  <Link2 className="w-4 h-4 mr-2" />
-                  Reauthorize Connection
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card">
-            <CardHeader>
-              <CardTitle className="text-card-foreground">Embedded App Configuration</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              {appConfigLoading ? (
-                <div className="space-y-3">
-                  <div className="h-4 w-40 bg-muted rounded" />
-                  <div className="h-4 w-64 bg-muted rounded" />
-                  <div className="h-4 w-56 bg-muted rounded" />
-                </div>
-              ) : appConfig ? (
-                <>
-                  <div className="flex items-center justify-between gap-3 p-4 rounded-lg bg-muted/50">
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-card-foreground">{appConfig.configuration_name}</p>
-                      <p className="text-xs text-muted-foreground">App Version Key: {appConfig.version_key}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="capitalize">
-                        {procoreMode}
-                      </Badge>
-                      <Badge className={appConfig.installed ? "bg-success text-primary-foreground" : "bg-destructive"}>
-                        {appConfig.installed ? "Installed" : "Not installed"}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-lg bg-muted/50 space-y-1">
-                      <p className="text-xs text-muted-foreground">Enabled projects</p>
-                      <p className="text-lg font-semibold text-card-foreground">{appConfig.enabled_project_ids.length}</p>
-                      <p className="text-xs text-muted-foreground">Procore requires config applied per-project.</p>
-                    </div>
-                    <div className={cn("p-4 rounded-lg border space-y-2", canUseAppForProject ? "bg-success/5 border-success/20" : "bg-warning/10 border-warning/30")}>
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium text-card-foreground">This project</p>
-                        <Badge className={canUseAppForProject ? "bg-success text-primary-foreground" : "bg-warning text-primary-foreground"}>
-                          {canUseAppForProject ? "Enabled" : "Not enabled"}
-                        </Badge>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-3 md:p-4 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={cn("w-3 h-3 rounded-full shrink-0", isConnected ? "bg-success animate-pulse" : "bg-destructive")}
+                      />
+                      <div>
+                        <p className="font-medium text-card-foreground">
+                          {isConnected ? "Connected to Procore" : "Disconnected"}
+                        </p>
+                        <p className="text-sm text-muted-foreground">Last sync: {lastSyncAt}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {canUseAppForProject
-                          ? "This embedded app is configured for the selected project."
-                          : "In Procore, the app will not appear under “Select an App” until enabled for this project."}
-                      </p>
-                      {!canUseAppForProject && procoreMode === "mock" && (
-                        <Button
-                          size="sm"
-                          className="bg-bannett-navy hover:bg-bannett-navy/90"
-                          onClick={async () => {
-                            try {
-                              const res = await postAppConfigAction("enable_project", selectedProject.id)
-                              if ("ok" in res && res.ok) {
-                                setAppConfig(res.config)
-                                setAppEnabledForProject(true)
-                                toast.success("Enabled for project", { description: projectKey })
-                              }
-                            } catch (err) {
-                              toast.error("Unable to enable project", { description: (err as Error).message })
-                            }
-                          }}
-                        >
-                          Enable for this project (mock)
-                        </Button>
-                      )}
                     </div>
+                    <Badge className={cn("self-start md:self-center", isConnected ? "bg-success text-primary-foreground" : "bg-destructive")}>
+                      {isConnected ? "Active" : "Inactive"}
+                    </Badge>
                   </div>
 
-                  <div className="space-y-3">
-                    <p className="text-sm font-medium text-card-foreground">Required permissions</p>
-                    <div className="space-y-2">
-                      {appConfig.required_permissions.map((perm) => (
-                        <div key={`${perm.area}-${perm.level}`} className="p-3 rounded-lg bg-muted/50">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-sm font-medium text-card-foreground">{perm.area}</p>
-                            <Badge variant="secondary" className="uppercase">
-                              {perm.level}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">{perm.description}</p>
-                          <div className="mt-2 space-y-1">
-                            {perm.endpoint_examples.slice(0, 3).map((ex) => (
-                              <p key={ex} className="text-[11px] text-muted-foreground font-mono">
-                                {ex}
-                              </p>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <p className="text-sm font-medium text-card-foreground">Embedded context</p>
-                    {embed.embedded && embed.context ? (
-                      <div className="p-3 rounded-lg bg-muted/50 text-sm">
-                        <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                          <div>
-                            <span className="font-medium text-card-foreground">Mode:</span> {embed.context.mode ?? "—"}
-                          </div>
-                          <div>
-                            <span className="font-medium text-card-foreground">View:</span> {embed.context.view ?? "—"}
-                          </div>
-                          <div>
-                            <span className="font-medium text-card-foreground">Company:</span> {embed.context.company_id ?? "—"}
-                          </div>
-                          <div>
-                            <span className="font-medium text-card-foreground">Project:</span> {embed.context.project_id ?? "—"}
-                          </div>
-                        </div>
-                      </div>
+                  <div className="flex justify-end">
+                    {isConnected ? (
+                      <Button variant="outline" onClick={() => setDisconnectModalOpen(true)} disabled={isSyncing}>
+                        Disconnect
+                      </Button>
                     ) : (
-                      <div className="p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground">
-                        Not running inside a Procore iframe context (full-screen or side panel).
-                      </div>
+                      <Button onClick={() => setConnectModalOpen(true)} className="bg-bannett-navy hover:bg-bannett-navy/90">
+                        Connect to Procore
+                      </Button>
                     )}
                   </div>
-                </>
-              ) : (
-                <div className="p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground">
-                  Unable to load app configuration.
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
-          <Card className="bg-card">
-            <CardHeader>
-              <CardTitle className="text-card-foreground">API Coverage (Mocked)</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                This mockup uses Procore-like request shapes and parameters. Live mode will call these endpoints when OAuth is connected.
-              </p>
-              <div className="space-y-3">
-                {apiCoverage.map((row) => (
-                  <div key={row.workflow} className="p-4 rounded-lg bg-muted/50">
-                    <p className="text-sm font-medium text-card-foreground">{row.workflow}</p>
-                    <div className="mt-2 space-y-1">
-                      {row.endpoints.map((ep) => (
-                        <p key={ep} className="text-[11px] text-muted-foreground font-mono">
-                          {ep}
-                        </p>
-                      ))}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <FileText className="w-4 h-4 text-bannett-navy" />
+                        <span className="text-sm font-medium text-card-foreground">Documents</span>
+                      </div>
+                      <p className="text-2xl font-semibold text-card-foreground">24</p>
+                      <p className="text-xs text-muted-foreground">synced this week</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Calculator className="w-4 h-4 text-bannett-blue" />
+                        <span className="text-sm font-medium text-card-foreground">Estimates</span>
+                      </div>
+                      <p className="text-2xl font-semibold text-card-foreground">3</p>
+                      <p className="text-xs text-muted-foreground">pushed to budget</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Users className="w-4 h-4 text-bannett-light" />
+                        <span className="text-sm font-medium text-card-foreground">Vendors</span>
+                      </div>
+                      <p className="text-2xl font-semibold text-card-foreground">12</p>
+                      <p className="text-xs text-muted-foreground">in directory</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Connect Modal */}
-          <Dialog open={connectModalOpen} onOpenChange={setConnectModalOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Connect to Procore</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <p className="text-sm text-muted-foreground">
-                  Authorize this tool to access your Procore projects for syncing estimates, subcontractor selections,
-                  and zoning review artifacts.
-                </p>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-success" />
-                    <span className="text-card-foreground">Read projects and budgets</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-success" />
-                    <span className="text-card-foreground">Create bid package entries</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-success" />
-                    <span className="text-card-foreground">Upload documents to project files</span>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setConnectModalOpen(false)} disabled={isSyncing}>
-                  Cancel
-                </Button>
-                <Button
-                  className="bg-bannett-navy hover:bg-bannett-navy/90"
-                  onClick={() => {
-                    if (!canUseAppForProject) {
-                      toast.error("App not configured for this project", {
-                        description: "Ask a Procore Company Admin to enable this embedded app for the project.",
-                      })
-                      return
-                    }
-
-                    if (procoreMode === "live") {
-                      setConnectModalOpen(false)
-                      if (typeof window !== "undefined") window.location.assign("/api/procore/login")
-                      return
-                    }
-
-                    setIsSyncing(true)
-                    setTimeout(() => {
-                      setIsSyncing(false)
-                      setIsConnected(true)
-                      setConnectModalOpen(false)
-                      toast.success("Connected to Procore", { description: "Connection established and verified." })
-                      appendMockLog({
-                        type: "auth",
-                        status: "info",
-                        message: `Connection established. (${selectedProject.project_number ?? projectKey})`,
-                      }).finally(() => refreshLogs())
-                    }, 1500)
-                  }}
-                  disabled={isSyncing}
-                >
-                  {isSyncing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Connecting...
-                    </>
-                  ) : (
-                    "Authorize"
-                  )}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          {/* Disconnect Modal */}
-          <Dialog open={disconnectModalOpen} onOpenChange={setDisconnectModalOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Disconnect from Procore?</DialogTitle>
-              </DialogHeader>
-              <div className="py-4 space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  Disconnecting will pause syncing. You can reconnect at any time.
-                </p>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setDisconnectModalOpen(false)} disabled={isSyncing}>
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => {
-                    setDisconnectModalOpen(false)
-                    setIsConnected(false)
-                    toast.success("Disconnected", { description: "Syncing has been paused." })
-                    appendMockLog({
-                      type: "auth",
-                      status: "warning",
-                      message: `Connection disconnected by user. (${selectedProject.project_number ?? projectKey})`,
-                    })
-                  }}
-                  disabled={isSyncing}
-                >
-                  Disconnect
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          {/* Info Modal */}
-          <Dialog open={infoModalOpen} onOpenChange={setInfoModalOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>About Procore Sync</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <p className="text-muted-foreground">
-                  The Procore Sync layer connects the Preconstruction AI Tool with your Procore project environment.
-                  This enables seamless data transfer between systems.
-                </p>
-                <div className="space-y-2">
-                  <h4 className="font-medium text-card-foreground">What gets synced:</h4>
-                  <ul className="space-y-1 text-sm text-muted-foreground">
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-success" />
-                      Estimates to Budget module
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-success" />
-                      Subcontractors to Directory & Bid Packages
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-success" />
-                      Documents to Project Documents
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-success" />
-                      Drawings to Planroom
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={() => setInfoModalOpen(false)}>Close</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </TabsContent>
-
-        {/* Field Mapping Tab */}
-        <TabsContent value="mapping" className="space-y-6">
-          <Card className="bg-card">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-card-foreground">Field Mapping</CardTitle>
-                <Button variant="outline" size="sm" onClick={resetMappings}>
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Reset to Defaults
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Configure how data from the Preconstruction AI Tool maps to Procore fields.
-              </p>
-
-              <div className="border rounded-lg overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-muted/50">
-                    <tr>
-                      <th className="text-left p-3 text-sm font-medium text-muted-foreground">AI Tool Field</th>
-                      <th className="text-center p-3 text-sm font-medium text-muted-foreground"></th>
-                      <th className="text-left p-3 text-sm font-medium text-muted-foreground">Procore Field</th>
-                      <th className="text-center p-3 text-sm font-medium text-muted-foreground">Status</th>
-                      <th className="w-20 p-3"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mappings.map((mapping, i) => (
-                      <tr key={i} className="border-t">
-                        <td className="p-3 text-sm text-card-foreground">{mapping.aiField}</td>
-                        <td className="p-3 text-center">
-                          <ChevronRight className="w-4 h-4 text-muted-foreground inline" />
-                        </td>
-                        <td className="p-3 text-sm text-card-foreground">{mapping.procoreField}</td>
-                        <td className="p-3 text-center">
-                          <Badge
-                            variant={
-                              mapping.status === "mapped"
-                                ? "default"
-                                : mapping.status === "review"
-                                  ? "secondary"
-                                  : "outline"
-                            }
-                            className={mapping.status === "mapped" ? "bg-success" : ""}
-                          >
-                            {mapping.status === "mapped" && <Check className="w-3 h-3 mr-1" />}
-                            {mapping.status === "review" && <AlertCircle className="w-3 h-3 mr-1" />}
-                            {mapping.status}
-                          </Badge>
-                        </td>
-                        <td className="p-3">
-                          <Button variant="ghost" size="sm" onClick={() => setEditMappingModal(mapping)}>
-                            <Edit3 className="w-4 h-4" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Edit Mapping Modal */}
-          <Dialog open={!!editMappingModal} onOpenChange={() => setEditMappingModal(null)}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Edit Field Mapping</DialogTitle>
-              </DialogHeader>
-              {editMappingModal && (
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label>AI Tool Field</Label>
-                    <Input value={editMappingModal.aiField} disabled />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Procore Field</Label>
-                    <Select defaultValue={editMappingModal.procoreField}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Cost Code">Cost Code</SelectItem>
-                        <SelectItem value="Description">Description</SelectItem>
-                        <SelectItem value="Quantity">Quantity</SelectItem>
-                        <SelectItem value="Unit Price">Unit Price</SelectItem>
-                        <SelectItem value="Directory Entry">Directory Entry</SelectItem>
-                        <SelectItem value="Document Description">Document Description</SelectItem>
-                        <SelectItem value="Project Notes">Project Notes</SelectItem>
-                        <SelectItem value="Custom Field 1">Custom Field 1</SelectItem>
-                        <SelectItem value="Custom Field 2">Custom Field 2</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setEditMappingModal(null)}>
-                  Cancel
-                </Button>
-                <Button
-                  className="bg-bannett-navy hover:bg-bannett-navy/90"
-                  onClick={() => {
-                    setEditMappingModal(null)
-                    toast.success("Mapping updated successfully")
-                  }}
-                >
-                  Save Mapping
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </TabsContent>
-
-        {/* Sync Logs Tab */}
-        <TabsContent value="logs" className="space-y-6">
-          <Card className="bg-card">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-card-foreground">Sync Logs</CardTitle>
-                <Button variant="ghost" size="icon" onClick={refreshLogs} disabled={logsLoading}>
-                  <RefreshCw className={cn("w-4 h-4", logsLoading && "animate-spin")} />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {logsLoading ? (
-                  <div className="p-4 rounded-lg bg-muted/50 flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Loading sync logs…
-                  </div>
-                ) : logs.length === 0 ? (
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <p className="text-sm text-muted-foreground">
-                      {isConnected ? "No sync events logged yet for this project." : "Connect to Procore to view sync logs."}
-                    </p>
-                  </div>
-                ) : (
-                  logs.map((log) => (
-                    <div
-                      key={log.id}
-                      className={cn(
-                        "p-4 rounded-lg cursor-pointer transition-colors",
-                        log.status === "success"
-                          ? "bg-muted/50 hover:bg-muted"
-                          : log.status === "warning"
-                            ? "bg-warning/10 hover:bg-warning/20"
-                            : log.status === "error"
-                              ? "bg-destructive/10 hover:bg-destructive/20"
-                              : "bg-muted/50 hover:bg-muted",
-                      )}
-                      onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-3 md:p-4 rounded-lg bg-muted/50">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-card-foreground">Documents browser</p>
+                      <p className="text-xs text-muted-foreground">Navigate folders and verify recent exports (mock).</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => setDocumentsBrowserOpen(true)}
+                      disabled={!isConnected || !canUseAppForProject}
+                      className="w-full md:w-auto"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {log.status === "success" && <Check className="w-5 h-5 text-success" />}
-                          {log.status === "warning" && <AlertCircle className="w-5 h-5 text-warning" />}
-                          {log.status === "error" && <AlertCircle className="w-5 h-5 text-destructive" />}
-                          {log.status === "info" && <Info className="w-5 h-5 text-muted-foreground" />}
-                          <div>
-                            <p className="font-medium text-card-foreground">{log.message}</p>
-                            <p className="text-sm text-muted-foreground">{formatTimestamp(new Date(log.created_at))}</p>
-                          </div>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Browse Documents
+                    </Button>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={handleSync}
+                      className="bg-bannett-navy hover:bg-bannett-navy/90"
+                      disabled={isSyncing || !isConnected || !canUseAppForProject}
+                    >
+                      {isSyncing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Syncing...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="w-4 h-4 mr-2" />
+                          Sync Now
+                        </>
+                      )}
+                    </Button>
+                    <Button variant="outline" onClick={handleReauthorize} disabled={isSyncing || !canUseAppForProject}>
+                      <Link2 className="w-4 h-4 mr-2" />
+                      Reauthorize Connection
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card">
+                <CardHeader>
+                  <CardTitle className="text-card-foreground">Embedded App Configuration</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  {appConfigLoading ? (
+                    <div className="space-y-3">
+                      <div className="h-4 w-40 bg-muted rounded" />
+                      <div className="h-4 w-64 bg-muted rounded" />
+                      <div className="h-4 w-56 bg-muted rounded" />
+                    </div>
+                  ) : appConfig ? (
+                    <>
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 rounded-lg bg-muted/50">
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-card-foreground">{appConfig.configuration_name}</p>
+                          <p className="text-xs text-muted-foreground">App Version Key: {appConfig.version_key}</p>
                         </div>
-                        <ChevronDown
-                          className={cn(
-                            "w-4 h-4 text-muted-foreground transition-transform",
-                            expandedLog === log.id && "rotate-180",
-                          )}
-                        />
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="capitalize">
+                            {procoreMode}
+                          </Badge>
+                          <Badge className={appConfig.installed ? "bg-success text-primary-foreground" : "bg-destructive"}>
+                            {appConfig.installed ? "Installed" : "Not installed"}
+                          </Badge>
+                        </div>
                       </div>
 
-                      {expandedLog === log.id && (
-                        <div className="mt-3 pt-3 border-t border-border space-y-1">
-                          <p className="text-sm text-muted-foreground">
-                            Type: {syncTypeLabel[log.type]} • Status: {log.status}
-                          </p>
-                          <p className="text-sm text-muted-foreground">Project: {projectKey}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-4 rounded-lg bg-muted/50 space-y-1">
+                          <p className="text-xs text-muted-foreground">Enabled projects</p>
+                          <p className="text-lg font-semibold text-card-foreground">{appConfig.enabled_project_ids.length}</p>
+                          <p className="text-xs text-muted-foreground">Procore requires config applied per-project.</p>
                         </div>
-                      )}
+                        <div className={cn("p-4 rounded-lg border space-y-2", canUseAppForProject ? "bg-success/5 border-success/20" : "bg-warning/10 border-warning/30")}>
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-medium text-card-foreground">This project</p>
+                            <Badge className={canUseAppForProject ? "bg-success text-primary-foreground" : "bg-warning text-primary-foreground"}>
+                              {canUseAppForProject ? "Enabled" : "Not enabled"}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {canUseAppForProject
+                              ? "This embedded app is configured for the selected project."
+                              : "In Procore, the app will not appear under “Select an App” until enabled for this project."}
+                          </p>
+                          {!canUseAppForProject && procoreMode === "mock" && (
+                            <Button
+                              size="sm"
+                              className="bg-bannett-navy hover:bg-bannett-navy/90"
+                              onClick={async () => {
+                                try {
+                                  const res = await postAppConfigAction("enable_project", selectedProject.id)
+                                  if ("ok" in res && res.ok) {
+                                    setAppConfig(res.config)
+                                    setAppEnabledForProject(true)
+                                    toast.success("Enabled for project", { description: projectKey })
+                                  }
+                                } catch (err) {
+                                  toast.error("Unable to enable project", { description: (err as Error).message })
+                                }
+                              }}
+                            >
+                              Enable for this project (mock)
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <p className="text-sm font-medium text-card-foreground">Required permissions</p>
+                        <div className="space-y-2">
+                          {appConfig.required_permissions.map((perm) => (
+                            <div key={`${perm.area}-${perm.level}`} className="p-3 rounded-lg bg-muted/50">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="text-sm font-medium text-card-foreground">{perm.area}</p>
+                                <Badge variant="secondary" className="uppercase">
+                                  {perm.level}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">{perm.description}</p>
+                              <div className="mt-2 space-y-1">
+                                {perm.endpoint_examples.slice(0, 3).map((ex) => (
+                                  <p key={ex} className="text-[11px] text-muted-foreground font-mono">
+                                    {ex}
+                                  </p>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <p className="text-sm font-medium text-card-foreground">Embedded context</p>
+                        {embed.embedded && embed.context ? (
+                          <div className="p-3 rounded-lg bg-muted/50 text-sm">
+                            <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                              <div>
+                                <span className="font-medium text-card-foreground">Mode:</span> {embed.context.mode ?? "—"}
+                              </div>
+                              <div>
+                                <span className="font-medium text-card-foreground">View:</span> {embed.context.view ?? "—"}
+                              </div>
+                              <div>
+                                <span className="font-medium text-card-foreground">Company:</span> {embed.context.company_id ?? "—"}
+                              </div>
+                              <div>
+                                <span className="font-medium text-card-foreground">Project:</span> {embed.context.project_id ?? "—"}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground">
+                            Not running inside a Procore iframe context (full-screen or side panel).
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground">
+                      Unable to load app configuration.
                     </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="bg-card">
+                <CardHeader>
+                  <CardTitle className="text-card-foreground">API Coverage (Mocked)</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    This mockup uses Procore-like request shapes and parameters. Live mode will call these endpoints when OAuth is connected.
+                  </p>
+                  <div className="space-y-3">
+                    {apiCoverage.map((row) => (
+                      <div key={row.workflow} className="p-4 rounded-lg bg-muted/50">
+                        <p className="text-sm font-medium text-card-foreground">{row.workflow}</p>
+                        <div className="mt-2 space-y-1">
+                          {row.endpoints.map((ep) => (
+                            <p key={ep} className="text-[11px] text-muted-foreground font-mono">
+                              {ep}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Connect Modal */}
+              <Dialog open={connectModalOpen} onOpenChange={setConnectModalOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Connect to Procore</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <p className="text-sm text-muted-foreground">
+                      Authorize this tool to access your Procore projects for syncing estimates, subcontractor selections,
+                      and zoning review artifacts.
+                    </p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-success" />
+                        <span className="text-card-foreground">Read projects and budgets</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-success" />
+                        <span className="text-card-foreground">Create bid package entries</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-success" />
+                        <span className="text-card-foreground">Upload documents to project files</span>
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setConnectModalOpen(false)} disabled={isSyncing}>
+                      Cancel
+                    </Button>
+                    <Button
+                      className="bg-bannett-navy hover:bg-bannett-navy/90"
+                      onClick={() => {
+                        if (!canUseAppForProject) {
+                          toast.error("App not configured for this project", {
+                            description: "Ask a Procore Company Admin to enable this embedded app for the project.",
+                          })
+                          return
+                        }
+
+                        if (procoreMode === "live") {
+                          setConnectModalOpen(false)
+                          if (typeof window !== "undefined") window.location.assign("/api/procore/login")
+                          return
+                        }
+
+                        setIsSyncing(true)
+                        setTimeout(() => {
+                          setIsSyncing(false)
+                          setIsConnected(true)
+                          setConnectModalOpen(false)
+                          toast.success("Connected to Procore", { description: "Connection established and verified." })
+                          appendMockLog({
+                            type: "auth",
+                            status: "info",
+                            message: `Connection established. (${selectedProject.project_number ?? projectKey})`,
+                          }).finally(() => refreshLogs())
+                        }, 1500)
+                      }}
+                      disabled={isSyncing}
+                    >
+                      {isSyncing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Connecting...
+                        </>
+                      ) : (
+                        "Authorize"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              {/* Disconnect Modal */}
+              <Dialog open={disconnectModalOpen} onOpenChange={setDisconnectModalOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Disconnect from Procore?</DialogTitle>
+                  </DialogHeader>
+                  <div className="py-4 space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      Disconnecting will pause syncing. You can reconnect at any time.
+                    </p>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setDisconnectModalOpen(false)} disabled={isSyncing}>
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        setDisconnectModalOpen(false)
+                        setIsConnected(false)
+                        toast.success("Disconnected", { description: "Syncing has been paused." })
+                        appendMockLog({
+                          type: "auth",
+                          status: "warning",
+                          message: `Connection disconnected by user. (${selectedProject.project_number ?? projectKey})`,
+                        })
+                      }}
+                      disabled={isSyncing}
+                    >
+                      Disconnect
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              {/* Info Modal */}
+              <Dialog open={infoModalOpen} onOpenChange={setInfoModalOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>About Procore Sync</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <p className="text-muted-foreground">
+                      The Procore Sync layer connects the Preconstruction AI Tool with your Procore project environment.
+                      This enables seamless data transfer between systems.
+                    </p>
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-card-foreground">What gets synced:</h4>
+                      <ul className="space-y-1 text-sm text-muted-foreground">
+                        <li className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-success" />
+                          Estimates to Budget module
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-success" />
+                          Subcontractors to Directory & Bid Packages
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-success" />
+                          Documents to Project Documents
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-success" />
+                          Drawings to Planroom
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button onClick={() => setInfoModalOpen(false)}>Close</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </TabsContent>
+
+            {/* Field Mapping Tab */}
+            <TabsContent value="mapping" className="space-y-6">
+              <Card className="bg-card">
+                <CardHeader>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <CardTitle className="text-card-foreground">Field Mapping</CardTitle>
+                    <Button variant="outline" size="sm" onClick={resetMappings} className="w-full md:w-auto">
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      Reset to Defaults
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Configure how data from the Preconstruction AI Tool maps to Procore fields.
+                  </p>
+
+                  <div className="border rounded-lg overflow-hidden overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-muted/50">
+                        <tr>
+                          <th className="text-left p-3 text-sm font-medium text-muted-foreground">AI Tool Field</th>
+                          <th className="text-center p-3 text-sm font-medium text-muted-foreground"></th>
+                          <th className="text-left p-3 text-sm font-medium text-muted-foreground">Procore Field</th>
+                          <th className="text-center p-3 text-sm font-medium text-muted-foreground">Status</th>
+                          <th className="w-20 p-3"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {mappings.map((mapping, i) => (
+                          <tr key={i} className="border-t">
+                            <td className="p-3 text-sm text-card-foreground">{mapping.aiField}</td>
+                            <td className="p-3 text-center">
+                              <ChevronRight className="w-4 h-4 text-muted-foreground inline" />
+                            </td>
+                            <td className="p-3 text-sm text-card-foreground">{mapping.procoreField}</td>
+                            <td className="p-3 text-center">
+                              <Badge
+                                variant={
+                                  mapping.status === "mapped"
+                                    ? "default"
+                                    : mapping.status === "review"
+                                      ? "secondary"
+                                      : "outline"
+                                }
+                                className={mapping.status === "mapped" ? "bg-success" : ""}
+                              >
+                                {mapping.status === "mapped" && <Check className="w-3 h-3 mr-1" />}
+                                {mapping.status === "review" && <AlertCircle className="w-3 h-3 mr-1" />}
+                                {mapping.status}
+                              </Badge>
+                            </td>
+                            <td className="p-3">
+                              <Button variant="ghost" size="sm" onClick={() => setEditMappingModal(mapping)}>
+                                <Edit3 className="w-4 h-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Edit Mapping Modal */}
+              <Dialog open={!!editMappingModal} onOpenChange={() => setEditMappingModal(null)}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit Field Mapping</DialogTitle>
+                  </DialogHeader>
+                  {editMappingModal && (
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label>AI Tool Field</Label>
+                        <Input value={editMappingModal.aiField} disabled />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Procore Field</Label>
+                        <Select defaultValue={editMappingModal.procoreField}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Cost Code">Cost Code</SelectItem>
+                            <SelectItem value="Description">Description</SelectItem>
+                            <SelectItem value="Quantity">Quantity</SelectItem>
+                            <SelectItem value="Unit Price">Unit Price</SelectItem>
+                            <SelectItem value="Directory Entry">Directory Entry</SelectItem>
+                            <SelectItem value="Document Description">Document Description</SelectItem>
+                            <SelectItem value="Project Notes">Project Notes</SelectItem>
+                            <SelectItem value="Custom Field 1">Custom Field 1</SelectItem>
+                            <SelectItem value="Custom Field 2">Custom Field 2</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setEditMappingModal(null)}>
+                      Cancel
+                    </Button>
+                    <Button
+                      className="bg-bannett-navy hover:bg-bannett-navy/90"
+                      onClick={() => {
+                        setEditMappingModal(null)
+                        toast.success("Mapping updated successfully")
+                      }}
+                    >
+                      Save Mapping
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </TabsContent>
+
+            {/* Sync Logs Tab */}
+            <TabsContent value="logs" className="space-y-6">
+              <Card className="bg-card">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-card-foreground">Sync Logs</CardTitle>
+                    <Button variant="ghost" size="icon" onClick={refreshLogs} disabled={logsLoading}>
+                      <RefreshCw className={cn("w-4 h-4", logsLoading && "animate-spin")} />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {logsLoading ? (
+                      <div className="p-4 rounded-lg bg-muted/50 flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Loading sync logs…
+                      </div>
+                    ) : logs.length === 0 ? (
+                      <div className="p-4 rounded-lg bg-muted/50">
+                        <p className="text-sm text-muted-foreground">
+                          {isConnected ? "No sync events logged yet for this project." : "Connect to Procore to view sync logs."}
+                        </p>
+                      </div>
+                    ) : (
+                      logs.map((log) => (
+                        <div
+                          key={log.id}
+                          className={cn(
+                            "p-4 rounded-lg cursor-pointer transition-colors",
+                            log.status === "success"
+                              ? "bg-muted/50 hover:bg-muted"
+                              : log.status === "warning"
+                                ? "bg-warning/10 hover:bg-warning/20"
+                                : log.status === "error"
+                                  ? "bg-destructive/10 hover:bg-destructive/20"
+                                  : "bg-muted/50 hover:bg-muted",
+                          )}
+                          onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              {log.status === "success" && <Check className="w-5 h-5 text-success" />}
+                              {log.status === "warning" && <AlertCircle className="w-5 h-5 text-warning" />}
+                              {log.status === "error" && <AlertCircle className="w-5 h-5 text-destructive" />}
+                              {log.status === "info" && <Info className="w-5 h-5 text-muted-foreground" />}
+                              <div>
+                                <p className="font-medium text-card-foreground">{log.message}</p>
+                                <p className="text-sm text-muted-foreground">{formatTimestamp(new Date(log.created_at))}</p>
+                              </div>
+                            </div>
+                            <ChevronDown
+                              className={cn(
+                                "w-4 h-4 text-muted-foreground transition-transform",
+                                expandedLog === log.id && "rotate-180",
+                              )}
+                            />
+                          </div>
+
+                          {expandedLog === log.id && (
+                            <div className="mt-3 pt-3 border-t border-border space-y-1">
+                              <p className="text-sm text-muted-foreground">
+                                Type: {syncTypeLabel[log.type]} • Status: {log.status}
+                              </p>
+                              <p className="text-sm text-muted-foreground">Project: {projectKey}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 

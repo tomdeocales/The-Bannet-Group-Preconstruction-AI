@@ -39,6 +39,7 @@ interface SidebarProps {
   projectsLoading?: boolean
   procoreConnected?: boolean
   onLogout?: () => void
+  className?: string
 }
 
 export function Sidebar({
@@ -50,11 +51,12 @@ export function Sidebar({
   projectsLoading,
   procoreConnected = true,
   onLogout,
+  className,
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("")
 
   return (
-    <aside className="w-64 bg-sidebar flex flex-col h-full">
+    <aside className={cn("w-64 bg-sidebar flex flex-col h-full", className)}>
       {/* Logo */}
       <div className="p-4">
         <div className="flex items-center gap-3">
@@ -79,27 +81,27 @@ export function Sidebar({
             </div>
             <ChevronDown className="w-4 h-4 text-muted-foreground" />
           </DropdownMenuTrigger>
-	          <DropdownMenuContent
-	            align="start"
-	            className="w-56 max-h-[360px] overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full"
-	          >
-	            {projectsLoading ? (
-	              <DropdownMenuItem className="text-muted-foreground">Loading projects…</DropdownMenuItem>
-	            ) : (
-	              projects.map((project) => (
-              <DropdownMenuItem
-                key={project.id}
-                onClick={() => setSelectedProject(project)}
-                className={cn(
-                  "cursor-pointer flex items-center justify-between text-black focus:bg-sidebar-accent/80 focus:text-black",
-                )}
-              >
-                <div className="flex items-center">
-                  <Building2 className="w-4 h-4 mr-2" />
-                  {project.display_name ?? project.name}
-                </div>
-                {project.id === selectedProject.id && <Check className="w-4 h-4 text-black" />}
-              </DropdownMenuItem>
+          <DropdownMenuContent
+            align="start"
+            className="w-56 max-h-[360px] overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full"
+          >
+            {projectsLoading ? (
+              <DropdownMenuItem className="text-muted-foreground">Loading projects…</DropdownMenuItem>
+            ) : (
+              projects.map((project) => (
+                <DropdownMenuItem
+                  key={project.id}
+                  onClick={() => setSelectedProject(project)}
+                  className={cn(
+                    "cursor-pointer flex items-center justify-between text-black focus:bg-sidebar-accent/80 focus:text-black",
+                  )}
+                >
+                  <div className="flex items-center">
+                    <Building2 className="w-4 h-4 mr-2" />
+                    {project.display_name ?? project.name}
+                  </div>
+                  {project.id === selectedProject.id && <Check className="w-4 h-4 text-black" />}
+                </DropdownMenuItem>
               ))
             )}
           </DropdownMenuContent>

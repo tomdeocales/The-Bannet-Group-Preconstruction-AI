@@ -259,45 +259,45 @@ const kpiData = [
 
 type ActivityFeedItem =
   | {
-      id: number
-      message: string
-      time: string
-      type: "parsing"
-      details: {
-        sheet: string
-        elements: { walls: number; doors: number; windows: number }
-        confidence: number
-        issues: string[]
-      }
+    id: number
+    message: string
+    time: string
+    type: "parsing"
+    details: {
+      sheet: string
+      elements: { walls: number; doors: number; windows: number }
+      confidence: number
+      issues: string[]
     }
+  }
   | {
-      id: number
-      message: string
-      time: string
-      type: "matching"
-      details: { package: string; recommendations: { name: string; score: number; distance: string; capacity: string }[] }
-    }
+    id: number
+    message: string
+    time: string
+    type: "matching"
+    details: { package: string; recommendations: { name: string; score: number; distance: string; capacity: string }[] }
+  }
   | {
-      id: number
-      message: string
-      time: string
-      type: "zoning"
-      details: { document: string; issue: string; requirement: string; recommendation: string }
-    }
+    id: number
+    message: string
+    time: string
+    type: "zoning"
+    details: { document: string; issue: string; requirement: string; recommendation: string }
+  }
   | {
-      id: number
-      message: string
-      time: string
-      type: "estimate"
-      details: { phase: string; totalCost: string; lineItems: number; pendingReview: number }
-    }
+    id: number
+    message: string
+    time: string
+    type: "estimate"
+    details: { phase: string; totalCost: string; lineItems: number; pendingReview: number }
+  }
   | {
-      id: number
-      message: string
-      time: string
-      type: "upload"
-      details: { sheets: number; totalPages: number; fileSize: string; uploadedBy: string }
-    }
+    id: number
+    message: string
+    time: string
+    type: "upload"
+    details: { sheets: number; totalPages: number; fileSize: string; uploadedBy: string }
+  }
 
 const activityFeed: ActivityFeedItem[] = [
   {
@@ -962,7 +962,7 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
   return (
     <div className="pt-0 pr-0 pb-1 pl-0 space-y-2 h-full flex flex-col min-h-0">
       {/* Header */}
-      <div className="flex items-center justify-between px-6">
+      <div className="flex items-center justify-between px-3 md:px-6">
         <div>
           <h1 className="text-xl md:text-2xl font-semibold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground">
@@ -977,10 +977,10 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
                 <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
               </Button>
             </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-72 [&_[data-highlighted]]:bg-accent [&_[data-highlighted]]:text-foreground [&_[data-highlighted]_span]:text-foreground [&_[data-highlighted]_p]:text-foreground"
-              >
+            <DropdownMenuContent
+              align="end"
+              className="w-72 [&_[data-highlighted]]:bg-accent [&_[data-highlighted]]:text-foreground [&_[data-highlighted]_span]:text-foreground [&_[data-highlighted]_p]:text-foreground"
+            >
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="flex flex-col items-start gap-1">
@@ -1009,7 +1009,7 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
                     <div className="w-9 h-9 rounded-full bg-bannett-navy flex items-center justify-center">
                       <User className="w-5 h-5 text-primary-foreground" />
                     </div>
-                    <div className="text-left">
+                    <div className="hidden md:block text-left">
                       <p className="text-sm font-medium text-foreground leading-tight">Sarah Chen</p>
                       <p className="text-xs text-muted-foreground leading-tight">Project Manager</p>
                     </div>
@@ -1027,30 +1027,30 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
         </div>
       </div>
 
-      <Card className="shadow-sm flex-1 min-h-0">
-        <CardContent className="space-y-6 p-6 h-full overflow-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
+      <Card className="shadow-sm flex-1 min-h-0 p-0 md:p-6">
+        <CardContent className="space-y-6 p-1 md:p-6 h-full overflow-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
           {/* KPI Cards */}
-	          {isRefreshing ? (
-	            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-	              {Array.from({ length: 4 }).map((_, i) => (
-	                <Card key={i} className="bg-card">
-                  <CardContent className="p-5 space-y-3">
+          {isRefreshing ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Card key={i} className="bg-card">
+                  <CardContent className="p-3 md:p-5 space-y-3">
                     <Skeleton className="h-4 w-28" />
                     <Skeleton className="h-10 w-16" />
                     <Skeleton className="h-4 w-24" />
                   </CardContent>
-	                </Card>
-	              ))}
-	            </div>
-	          ) : (
-	            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-	              {kpis.map((kpi) => (
-	                <Card
-	                  key={kpi.label}
-	                  className="cursor-pointer hover:shadow-md transition-shadow bg-card"
-	                  onClick={() => setSelectedKpi(kpi)}
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {kpis.map((kpi) => (
+                <Card
+                  key={kpi.label}
+                  className="cursor-pointer hover:shadow-md transition-shadow bg-card"
+                  onClick={() => setSelectedKpi(kpi)}
                 >
-                  <CardContent className="p-5">
+                  <CardContent className="p-3 md:p-5">
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">{kpi.label}</p>
@@ -1065,315 +1065,315 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
                       </div>
                     </div>
                   </CardContent>
-	                </Card>
-	              ))}
-	            </div>
-	          )}
+                </Card>
+              ))}
+            </div>
+          )}
 
-	          {/* Main Content Grid */}
-	          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             {/* Activity Feed */}
             <div className="lg:col-span-2">
-              <div className="flex items-center justify-between px-1 pt-1 pb-3">
+              <div className="flex flex-col md:flex-row md:items-center justify-between px-1 pt-1 pb-3 gap-4 md:gap-0">
                 <div className="flex items-center gap-2">
                   <CardTitle className="text-2xl font-semibold text-card-foreground">Recent Activity</CardTitle>
                   <Badge variant="secondary">{filteredActivity.length} updates</Badge>
                 </div>
-                <div className="flex items-center gap-2">
-	                  <div className="relative">
-	                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-	                    <Input
-	                      placeholder="Search activity..."
-	                      className="pl-9 w-48 h-9"
-	                      value={searchQuery}
-	                      onChange={(e) => setSearchQuery(e.target.value)}
-	                    />
-	                  </div>
-	                  <DropdownMenu>
-	                    <DropdownMenuTrigger asChild>
-	                      <Button variant="outline" size="sm">
-	                        <Filter className="w-4 h-4 mr-1" />
-	                        Filter
-	                      </Button>
-	                    </DropdownMenuTrigger>
-	                    <DropdownMenuContent align="end" className="w-48">
-	                      <DropdownMenuLabel>Filter Activity</DropdownMenuLabel>
-	                      <DropdownMenuSeparator />
-	                      <DropdownMenuItem onClick={() => setFilterType(null)}>
-	                        <div className="flex items-center justify-between w-full">
-	                          <span>All activity</span>
-	                          {!filterType && <Check className="w-4 h-4" />}
-	                        </div>
-	                      </DropdownMenuItem>
-	                      {(["parsing", "matching", "estimate", "zoning", "upload"] as ActivityFeedItem["type"][]).map(
-	                        (type) => (
-	                          <DropdownMenuItem key={type} onClick={() => setFilterType(type)}>
-	                            <div className="flex items-center justify-between w-full capitalize">
-	                              <span>{type}</span>
-	                              {filterType === type && <Check className="w-4 h-4" />}
-	                            </div>
-	                          </DropdownMenuItem>
-	                        ),
-	                      )}
-	                      <DropdownMenuSeparator />
-	                      <DropdownMenuItem
-	                        onClick={() => {
-	                          setFilterType(null)
-	                          setSearchQuery("")
-	                        }}
-	                      >
-	                        Clear
-	                      </DropdownMenuItem>
-	                    </DropdownMenuContent>
-	                  </DropdownMenu>
-	                </div>
-	              </div>
-	          {isRefreshing ? (
-            <div className="space-y-3 px-1 py-1 max-h-[480px] overflow-hidden pb-2 border-b border-border">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
-                  <Skeleton className="h-8 w-8 rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-[85%]" />
-                    <Skeleton className="h-3 w-20" />
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                  <div className="relative flex-1 md:flex-none">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search activity..."
+                      className="pl-9 w-full md:w-48 h-9"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                   </div>
-                  <Skeleton className="h-4 w-4" />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Filter className="w-4 h-4 mr-1" />
+                        Filter
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuLabel>Filter Activity</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setFilterType(null)}>
+                        <div className="flex items-center justify-between w-full">
+                          <span>All activity</span>
+                          {!filterType && <Check className="w-4 h-4" />}
+                        </div>
+                      </DropdownMenuItem>
+                      {(["parsing", "matching", "estimate", "zoning", "upload"] as ActivityFeedItem["type"][]).map(
+                        (type) => (
+                          <DropdownMenuItem key={type} onClick={() => setFilterType(type)}>
+                            <div className="flex items-center justify-between w-full capitalize">
+                              <span>{type}</span>
+                              {filterType === type && <Check className="w-4 h-4" />}
+                            </div>
+                          </DropdownMenuItem>
+                        ),
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setFilterType(null)
+                          setSearchQuery("")
+                        }}
+                      >
+                        Clear
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-              ))}
+              </div>
+              {isRefreshing ? (
+                <div className="space-y-3 px-1 py-1 max-h-[480px] overflow-hidden pb-2 border-b border-border">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="flex items-start gap-3 p-2 md:p-3 rounded-lg bg-muted/30">
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-[85%]" />
+                        <Skeleton className="h-3 w-20" />
+                      </div>
+                      <Skeleton className="h-4 w-4" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3 px-1 py-1 max-h-[480px] overflow-y-hidden hover:overflow-y-auto transition-[overflow] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full pb-2 border-b border-border">
+                  {filteredActivity.length === 0 ? (
+                    <div className="p-4 rounded-lg bg-muted/30">
+                      <p className="text-sm text-muted-foreground">No activity matches your search/filter.</p>
+                    </div>
+                  ) : (
+                    filteredActivity.map((item) => (
+                      <div key={item.id} className="space-y-2">
+                        <button
+                          type="button"
+                          aria-expanded={selectedActivity?.id === item.id}
+                          aria-controls={`activity-details-${item.id}`}
+                          className="w-full text-left flex items-start gap-3 p-2 md:p-3 rounded-lg cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-bannett-blue hover:bg-muted/50"
+                          onClick={() => setSelectedActivity((prev) => (prev?.id === item.id ? null : item))}
+                        >
+                          <div className="w-8 h-8 rounded-full bg-bannett-navy/10 flex items-center justify-center flex-shrink-0">
+                            {item.type === "parsing" && <FileText className="w-4 h-4 text-bannett-navy" />}
+                            {item.type === "matching" && <Users className="w-4 h-4 text-bannett-blue" />}
+                            {item.type === "zoning" && <AlertTriangle className="w-4 h-4 text-warning" />}
+                            {item.type === "estimate" && <Calculator className="w-4 h-4 text-bannett-light" />}
+                            {item.type === "upload" && <FileUp className="w-4 h-4 text-success" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-card-foreground">{item.message}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Clock className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">{item.time}</span>
+                            </div>
+                          </div>
+                          {selectedActivity?.id === item.id ? (
+                            <ChevronUp className="w-4 h-4 text-muted-foreground mt-1" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 text-muted-foreground mt-1" />
+                          )}
+                        </button>
+                        {selectedActivity?.id === item.id && (
+                          <div
+                            id={`activity-details-${item.id}`}
+                            className="w-full box-border p-3 rounded-lg bg-muted/30 border border-border"
+                          >
+                            <div className="text-xs text-muted-foreground mb-3">
+                              {projectKey} • {item.time}
+                            </div>
+
+                            {item.type === "parsing" && (
+                              <div className="space-y-3 text-sm">
+                                <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                                  <p className="text-[11px] font-medium text-card-foreground">Sheet</p>
+                                  <p className="text-sm text-muted-foreground">{item.details.sheet}</p>
+                                </div>
+                                <div className="grid grid-cols-3 gap-2">
+                                  <div className="p-3 rounded-lg bg-muted/50 text-center">
+                                    <p className="text-lg font-semibold text-bannett-navy">{item.details.elements.walls}</p>
+                                    <p className="text-[11px] text-muted-foreground">Walls</p>
+                                  </div>
+                                  <div className="p-3 rounded-lg bg-muted/50 text-center">
+                                    <p className="text-lg font-semibold text-bannett-blue">{item.details.elements.doors}</p>
+                                    <p className="text-[11px] text-muted-foreground">Doors</p>
+                                  </div>
+                                  <div className="p-3 rounded-lg bg-muted/50 text-center">
+                                    <p className="text-lg font-semibold text-bannett-light">{item.details.elements.windows}</p>
+                                    <p className="text-[11px] text-muted-foreground">Windows</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between p-3 rounded-lg bg-success/10">
+                                  <span className="text-xs text-card-foreground">Confidence</span>
+                                  <span className="font-semibold text-success">{item.details.confidence}%</span>
+                                </div>
+                                {item.details.issues.length > 0 && (
+                                  <div className="p-3 rounded-lg bg-warning/10 space-y-1">
+                                    <p className="text-[11px] font-medium text-warning">Issues</p>
+                                    {item.details.issues.map((issue, i) => (
+                                      <p key={i} className="text-xs text-muted-foreground">
+                                        {issue}
+                                      </p>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {item.type === "matching" && (
+                              <div className="space-y-3 text-sm">
+                                <div className="p-3 rounded-lg bg-muted/50">
+                                  <p className="text-[11px] font-medium text-card-foreground mb-1">Package</p>
+                                  <p className="text-sm text-muted-foreground">{item.details.package}</p>
+                                </div>
+                                <div className="space-y-2">
+                                  {item.details.recommendations.map((rec, i) => (
+                                    <div
+                                      key={`${rec.name}-${i}`}
+                                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                                    >
+                                      <div className="min-w-0">
+                                        <p className="text-sm font-medium text-card-foreground truncate">{rec.name}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {rec.distance} • {rec.capacity} capacity
+                                        </p>
+                                      </div>
+                                      <div className="text-right">
+                                        <p className="text-sm font-semibold text-bannett-blue">{rec.score}%</p>
+                                        <p className="text-[11px] text-muted-foreground">Match</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {item.type === "zoning" && (
+                              <div className="space-y-3 text-sm">
+                                <div className="p-3 rounded-lg bg-muted/50">
+                                  <p className="text-[11px] font-medium text-card-foreground mb-1">Document</p>
+                                  <p className="text-sm text-muted-foreground">{item.details.document}</p>
+                                </div>
+                                <div className="p-3 rounded-lg bg-warning/10 space-y-1">
+                                  <p className="text-[11px] font-medium text-warning">Flag</p>
+                                  <p className="text-sm font-medium text-warning">{item.details.issue}</p>
+                                  <p className="text-xs text-muted-foreground">{item.details.requirement}</p>
+                                </div>
+                                <div className="p-3 rounded-lg bg-muted/50">
+                                  <p className="text-[11px] font-medium text-card-foreground">Recommendation</p>
+                                  <p className="text-sm text-muted-foreground">{item.details.recommendation}</p>
+                                </div>
+                              </div>
+                            )}
+
+                            {item.type === "estimate" && (
+                              <div className="space-y-3 text-sm">
+                                <div className="p-3 rounded-lg bg-muted/50 space-y-1">
+                                  <p className="text-[11px] font-medium text-card-foreground">Phase</p>
+                                  <p className="text-sm text-muted-foreground">{item.details.phase}</p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="p-3 rounded-lg bg-muted/50">
+                                    <p className="text-xs text-muted-foreground">Total</p>
+                                    <p className="text-xl font-semibold text-bannett-navy">{item.details.totalCost}</p>
+                                  </div>
+                                  <div className="p-3 rounded-lg bg-muted/50">
+                                    <p className="text-xs text-muted-foreground">Line Items</p>
+                                    <p className="text-xl font-semibold text-card-foreground">{item.details.lineItems}</p>
+                                  </div>
+                                </div>
+                                <div className="p-3 rounded-lg bg-warning/10">
+                                  <p className="text-sm text-card-foreground">{item.details.pendingReview} items pending review</p>
+                                </div>
+                              </div>
+                            )}
+
+                            {item.type === "upload" && (
+                              <div className="space-y-3 text-sm">
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="p-3 rounded-lg bg-muted/50">
+                                    <p className="text-xs text-muted-foreground">Sheets</p>
+                                    <p className="text-xl font-semibold text-card-foreground">{item.details.sheets}</p>
+                                  </div>
+                                  <div className="p-3 rounded-lg bg-muted/50">
+                                    <p className="text-xs text-muted-foreground">File Size</p>
+                                    <p className="text-xl font-semibold text-card-foreground">{item.details.fileSize}</p>
+                                  </div>
+                                </div>
+                                <div className="p-3 rounded-lg bg-muted/50">
+                                  <p className="text-xs text-muted-foreground">Uploaded by</p>
+                                  <p className="text-sm font-medium text-card-foreground">{item.details.uploadedBy}</p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
-	          ) : (
-	            <div className="space-y-3 px-1 py-1 max-h-[480px] overflow-y-hidden hover:overflow-y-auto transition-[overflow] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full pb-2 border-b border-border">
-	              {filteredActivity.length === 0 ? (
-	                <div className="p-4 rounded-lg bg-muted/30">
-	                  <p className="text-sm text-muted-foreground">No activity matches your search/filter.</p>
-	                </div>
-	              ) : (
-	                filteredActivity.map((item) => (
-	                  <div key={item.id} className="space-y-2">
-	                    <button
-	                      type="button"
-	                      aria-expanded={selectedActivity?.id === item.id}
-	                      aria-controls={`activity-details-${item.id}`}
-	                      className="w-full text-left flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-bannett-blue hover:bg-muted/50"
-	                      onClick={() => setSelectedActivity((prev) => (prev?.id === item.id ? null : item))}
-	                    >
-	                      <div className="w-8 h-8 rounded-full bg-bannett-navy/10 flex items-center justify-center flex-shrink-0">
-	                        {item.type === "parsing" && <FileText className="w-4 h-4 text-bannett-navy" />}
-	                        {item.type === "matching" && <Users className="w-4 h-4 text-bannett-blue" />}
-	                        {item.type === "zoning" && <AlertTriangle className="w-4 h-4 text-warning" />}
-	                        {item.type === "estimate" && <Calculator className="w-4 h-4 text-bannett-light" />}
-	                        {item.type === "upload" && <FileUp className="w-4 h-4 text-success" />}
-	                      </div>
-	                      <div className="flex-1 min-w-0">
-	                        <p className="text-sm text-card-foreground">{item.message}</p>
-	                        <div className="flex items-center gap-2 mt-1">
-	                          <Clock className="w-3 h-3 text-muted-foreground" />
-	                          <span className="text-xs text-muted-foreground">{item.time}</span>
-	                        </div>
-	                      </div>
-	                      {selectedActivity?.id === item.id ? (
-	                        <ChevronUp className="w-4 h-4 text-muted-foreground mt-1" />
-	                      ) : (
-	                        <ChevronDown className="w-4 h-4 text-muted-foreground mt-1" />
-	                      )}
-			                    </button>
-			                    {selectedActivity?.id === item.id && (
-			                      <div
-			                        id={`activity-details-${item.id}`}
-			                        className="w-full box-border p-3 rounded-lg bg-muted/30 border border-border"
-			                      >
-			                        <div className="text-xs text-muted-foreground mb-3">
-			                          {projectKey} • {item.time}
-			                        </div>
 
-			                        {item.type === "parsing" && (
-			                          <div className="space-y-3 text-sm">
-	                            <div className="p-3 rounded-lg bg-muted/50 space-y-1">
-	                              <p className="text-[11px] font-medium text-card-foreground">Sheet</p>
-	                              <p className="text-sm text-muted-foreground">{item.details.sheet}</p>
-	                            </div>
-	                            <div className="grid grid-cols-3 gap-2">
-	                              <div className="p-3 rounded-lg bg-muted/50 text-center">
-	                                <p className="text-lg font-semibold text-bannett-navy">{item.details.elements.walls}</p>
-	                                <p className="text-[11px] text-muted-foreground">Walls</p>
-	                              </div>
-	                              <div className="p-3 rounded-lg bg-muted/50 text-center">
-	                                <p className="text-lg font-semibold text-bannett-blue">{item.details.elements.doors}</p>
-	                                <p className="text-[11px] text-muted-foreground">Doors</p>
-	                              </div>
-	                              <div className="p-3 rounded-lg bg-muted/50 text-center">
-	                                <p className="text-lg font-semibold text-bannett-light">{item.details.elements.windows}</p>
-	                                <p className="text-[11px] text-muted-foreground">Windows</p>
-	                              </div>
-	                            </div>
-	                            <div className="flex items-center justify-between p-3 rounded-lg bg-success/10">
-	                              <span className="text-xs text-card-foreground">Confidence</span>
-	                              <span className="font-semibold text-success">{item.details.confidence}%</span>
-	                            </div>
-	                            {item.details.issues.length > 0 && (
-	                              <div className="p-3 rounded-lg bg-warning/10 space-y-1">
-	                                <p className="text-[11px] font-medium text-warning">Issues</p>
-	                                {item.details.issues.map((issue, i) => (
-	                                  <p key={i} className="text-xs text-muted-foreground">
-	                                    {issue}
-	                                  </p>
-	                                ))}
-	                              </div>
-	                            )}
-	                          </div>
-	                        )}
-
-	                        {item.type === "matching" && (
-	                          <div className="space-y-3 text-sm">
-	                            <div className="p-3 rounded-lg bg-muted/50">
-	                              <p className="text-[11px] font-medium text-card-foreground mb-1">Package</p>
-	                              <p className="text-sm text-muted-foreground">{item.details.package}</p>
-	                            </div>
-	                            <div className="space-y-2">
-	                              {item.details.recommendations.map((rec, i) => (
-	                                <div
-	                                  key={`${rec.name}-${i}`}
-	                                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-	                                >
-	                                  <div className="min-w-0">
-	                                    <p className="text-sm font-medium text-card-foreground truncate">{rec.name}</p>
-	                                    <p className="text-xs text-muted-foreground">
-	                                      {rec.distance} • {rec.capacity} capacity
-	                                    </p>
-	                                  </div>
-	                                  <div className="text-right">
-	                                    <p className="text-sm font-semibold text-bannett-blue">{rec.score}%</p>
-	                                    <p className="text-[11px] text-muted-foreground">Match</p>
-	                                  </div>
-	                                </div>
-	                              ))}
-	                            </div>
-	                          </div>
-	                        )}
-
-	                        {item.type === "zoning" && (
-	                          <div className="space-y-3 text-sm">
-	                            <div className="p-3 rounded-lg bg-muted/50">
-	                              <p className="text-[11px] font-medium text-card-foreground mb-1">Document</p>
-	                              <p className="text-sm text-muted-foreground">{item.details.document}</p>
-	                            </div>
-	                            <div className="p-3 rounded-lg bg-warning/10 space-y-1">
-	                              <p className="text-[11px] font-medium text-warning">Flag</p>
-	                              <p className="text-sm font-medium text-warning">{item.details.issue}</p>
-	                              <p className="text-xs text-muted-foreground">{item.details.requirement}</p>
-	                            </div>
-	                            <div className="p-3 rounded-lg bg-muted/50">
-	                              <p className="text-[11px] font-medium text-card-foreground">Recommendation</p>
-	                              <p className="text-sm text-muted-foreground">{item.details.recommendation}</p>
-	                            </div>
-	                          </div>
-	                        )}
-
-	                        {item.type === "estimate" && (
-	                          <div className="space-y-3 text-sm">
-	                            <div className="p-3 rounded-lg bg-muted/50 space-y-1">
-	                              <p className="text-[11px] font-medium text-card-foreground">Phase</p>
-	                              <p className="text-sm text-muted-foreground">{item.details.phase}</p>
-	                            </div>
-	                            <div className="grid grid-cols-2 gap-2">
-	                              <div className="p-3 rounded-lg bg-muted/50">
-	                                <p className="text-xs text-muted-foreground">Total</p>
-	                                <p className="text-xl font-semibold text-bannett-navy">{item.details.totalCost}</p>
-	                              </div>
-	                              <div className="p-3 rounded-lg bg-muted/50">
-	                                <p className="text-xs text-muted-foreground">Line Items</p>
-	                                <p className="text-xl font-semibold text-card-foreground">{item.details.lineItems}</p>
-	                              </div>
-	                            </div>
-	                            <div className="p-3 rounded-lg bg-warning/10">
-	                              <p className="text-sm text-card-foreground">{item.details.pendingReview} items pending review</p>
-	                            </div>
-	                          </div>
-	                        )}
-
-			                        {item.type === "upload" && (
-			                          <div className="space-y-3 text-sm">
-	                            <div className="grid grid-cols-2 gap-2">
-	                              <div className="p-3 rounded-lg bg-muted/50">
-	                                <p className="text-xs text-muted-foreground">Sheets</p>
-	                                <p className="text-xl font-semibold text-card-foreground">{item.details.sheets}</p>
-	                              </div>
-	                              <div className="p-3 rounded-lg bg-muted/50">
-	                                <p className="text-xs text-muted-foreground">File Size</p>
-	                                <p className="text-xl font-semibold text-card-foreground">{item.details.fileSize}</p>
-	                              </div>
-	                            </div>
-	                            <div className="p-3 rounded-lg bg-muted/50">
-	                              <p className="text-xs text-muted-foreground">Uploaded by</p>
-	                              <p className="text-sm font-medium text-card-foreground">{item.details.uploadedBy}</p>
-	                            </div>
-	                          </div>
-			                        )}
-		                      </div>
-			                    )}
-			                  </div>
-			                ))
-			              )}
-	            </div>
-	          )}
-        </div>
-
-        {/* Quick Actions */}
-        <Card className="bg-card flex flex-col">
-          <CardHeader className="pb-3">
+            {/* Quick Actions */}
+            <Card className="bg-card flex flex-col">
+              <CardHeader className="pb-3">
                 <CardTitle className="text-2xl font-semibold text-card-foreground">Quick Actions</CardTitle>
               </CardHeader>
-	              <CardContent className="space-y-3">
-	                {isRefreshing ? (
-	                  <div className="space-y-3">
-	                    <Skeleton className="h-10 w-full" />
-	                    <Skeleton className="h-10 w-full" />
-	                    <Skeleton className="h-10 w-full" />
-	                  </div>
-	                ) : (
-	                  quickActions.map((action) => (
-	                    <Button
-	                      key={action.id}
-	                      className={action.className}
-	                      variant={action.variant}
+              <CardContent className="space-y-3">
+                {isRefreshing ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                ) : (
+                  quickActions.map((action) => (
+                    <Button
+                      key={action.id}
+                      className={action.className}
+                      variant={action.variant}
                       onClick={action.onClick}
                     >
-	                      <action.icon className="w-4 h-4 mr-2" />
-	                      {action.label}
-	                    </Button>
-	                  ))
-	                )}
+                      <action.icon className="w-4 h-4 mr-2" />
+                      {action.label}
+                    </Button>
+                  ))
+                )}
 
-	                {/* Project Stats */}
-	                <div className="pt-4 mt-4 border-t border-border">
-	                  <h3 className="text-sm font-medium text-card-foreground mb-3">Project Status</h3>
-	                  <div className="space-y-3">
-	                    <div className="flex items-center justify-between">
-	                      <span className="text-sm text-muted-foreground">Completion</span>
-	                      <span className="text-sm font-medium text-card-foreground">{projectStatus.completion}%</span>
-	                    </div>
-	                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-	                      <div
-	                        className="h-full bg-bannett-navy rounded-full transition-[width] duration-500"
-	                        style={{ width: `${projectStatus.completion}%` }}
-	                      />
-	                    </div>
-	                    <div className="grid grid-cols-2 gap-3 pt-2">
-	                      <div className="p-3 rounded-lg bg-muted/50">
-	                        <p className="text-xs text-muted-foreground">Est. Budget</p>
-	                        <p className="text-lg font-semibold text-card-foreground">{projectStatus.budget}</p>
-	                      </div>
-	                      <div className="p-3 rounded-lg bg-muted/50">
-	                        <p className="text-xs text-muted-foreground">Timeline</p>
-	                        <p className="text-lg font-semibold text-card-foreground">{projectStatus.timeline}</p>
-	                      </div>
-	                    </div>
-	                  </div>
-	                </div>
-	              </CardContent>
-	            </Card>
-	          </div>
-	        </CardContent>
+                {/* Project Stats */}
+                <div className="pt-4 mt-4 border-t border-border">
+                  <h3 className="text-sm font-medium text-card-foreground mb-3">Project Status</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Completion</span>
+                      <span className="text-sm font-medium text-card-foreground">{projectStatus.completion}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-bannett-navy rounded-full transition-[width] duration-500"
+                        style={{ width: `${projectStatus.completion}%` }}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <div className="p-3 rounded-lg bg-muted/50">
+                        <p className="text-xs text-muted-foreground">Est. Budget</p>
+                        <p className="text-lg font-semibold text-card-foreground">{projectStatus.budget}</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted/50">
+                        <p className="text-xs text-muted-foreground">Timeline</p>
+                        <p className="text-lg font-semibold text-card-foreground">{projectStatus.timeline}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </CardContent>
       </Card>
 
       {/* KPI Detail Sheet */}

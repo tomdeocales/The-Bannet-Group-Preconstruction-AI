@@ -641,14 +641,14 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
     const fallbackFromReasoning =
       reasoningModal && reasoningModal.id === vendorProfileId
         ? ({
-            id: reasoningModal.id,
-            name: reasoningModal.name,
-            trade_name: reasoningModal.trade,
-            trade_id: undefined,
-            city: reasoningModal.city,
-            state_code: reasoningModal.state_code,
-            business_phone: reasoningModal.business_phone,
-          } satisfies ProcoreVendor)
+          id: reasoningModal.id,
+          name: reasoningModal.name,
+          trade_name: reasoningModal.trade,
+          trade_id: undefined,
+          city: reasoningModal.city,
+          state_code: reasoningModal.state_code,
+          business_phone: reasoningModal.business_phone,
+        } satisfies ProcoreVendor)
         : null
 
     const vendor =
@@ -796,7 +796,7 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
   return (
     <div className="pt-0 pr-0 pb-1 pl-0 space-y-2 h-full flex flex-col min-h-0">
       {/* Header */}
-      <div className="flex items-center justify-between px-6">
+      <div className="flex items-center justify-between px-3 md:px-6">
         <div>
           <h1 className="text-xl md:text-2xl font-semibold text-foreground">Subcontractor Matching</h1>
           <p className="text-sm text-muted-foreground">{selectedProject.display_name ?? selectedProject.name}</p>
@@ -859,7 +859,7 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
                     <div className="w-9 h-9 rounded-full bg-bannett-navy flex items-center justify-center">
                       <User className="w-5 h-5 text-primary-foreground" />
                     </div>
-                    <div className="text-left">
+                    <div className="hidden md:block text-left">
                       <p className="text-sm font-medium text-foreground leading-tight">Sarah Chen</p>
                       <p className="text-xs text-muted-foreground leading-tight">Project Manager</p>
                     </div>
@@ -877,8 +877,8 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
         </div>
       </div>
 
-      <Card className="shadow-sm flex-1 min-h-0">
-        <CardContent className="p-6 h-full overflow-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
+      <Card className="shadow-sm flex-1 min-h-0 p-0 md:p-6">
+        <CardContent className="p-1 md:p-4 h-full overflow-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
           {workspaceView === "planroom" ? (
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -1061,7 +1061,7 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
                                 No bidders yet. Invite bidders using AI Matching.
                               </div>
                             ) : (
-                              <div className="border rounded-lg overflow-hidden">
+                              <div className="border rounded-lg overflow-hidden overflow-x-auto">
                                 <table className="w-full text-sm">
                                   <thead className="bg-muted/50">
                                     <tr>
@@ -1138,935 +1138,935 @@ export function SubcontractorMatching({ selectedProject, onLogout, setActiveModu
             </div>
           ) : (
             <>
-          {/* Step Indicator */}
-          <div className="flex items-center gap-2 mb-8">
-            {[1, 2, 3].map((s) => (
-              <div key={s} className="flex items-center">
-                <div
-                  className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors",
-                    step >= s ? "bg-bannett-navy text-primary-foreground" : "bg-muted text-muted-foreground",
-                  )}
-                >
-                  {step > s ? <Check className="w-4 h-4" /> : s}
-                </div>
-                <span
-                  className={cn(
-                    "ml-2 text-sm hidden sm:inline",
-                    step >= s ? "text-foreground" : "text-muted-foreground",
-                  )}
-                >
-                  {s === 1 && "Job Details"}
-                  {s === 2 && "AI Ranking"}
-                  {s === 3 && "Selection"}
-                </span>
-                {s < 3 && <ChevronRight className="w-4 h-4 mx-3 text-muted-foreground" />}
-              </div>
-            ))}
-          </div>
-
-      {/* Step 1: Job Details */}
-      {step === 1 && (
-        <Card className="bg-card">
-          <CardHeader>
-            <CardTitle className="text-card-foreground">Job Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Project Location</Label>
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-                  <MapPin className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm">{formData.location}</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Trade Category</Label>
-                <Select
-                  value={formData.trade}
-                  onValueChange={(value) => setFormData((prev) => ({ ...prev, trade: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select trade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mep">MEP (Full Package)</SelectItem>
-                    <SelectItem value="electrical">Electrical</SelectItem>
-                    <SelectItem value="plumbing">Plumbing</SelectItem>
-                    <SelectItem value="hvac">HVAC</SelectItem>
-                    <SelectItem value="concrete">Concrete</SelectItem>
-                    <SelectItem value="steel">Structural Steel</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Budget Range (Min)</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                  <Input
-                    value={formData.budgetMin}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, budgetMin: e.target.value }))}
-                    className="pl-7"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Budget Range (Max)</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-                  <Input
-                    value={formData.budgetMax}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, budgetMax: e.target.value }))}
-                    className="pl-7"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Timeline</Label>
-              <Select
-                value={formData.timeline}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, timeline: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="3 months">3 months</SelectItem>
-                  <SelectItem value="6 months">6 months</SelectItem>
-                  <SelectItem value="9 months">9 months</SelectItem>
-                  <SelectItem value="12 months">12 months</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Special Requirements</Label>
-              <Textarea
-                value={formData.requirements}
-                onChange={(e) => setFormData((prev) => ({ ...prev, requirements: e.target.value }))}
-                placeholder="e.g., Healthcare compliance, LEED certification, union labor..."
-              />
-            </div>
-
-            <Button
-              onClick={generateRecommendations}
-              className="w-full bg-bannett-navy hover:bg-bannett-navy/90"
-              disabled={!formData.trade}
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Generating Recommendations...
-                </>
-              ) : (
-                <>
-                  Generate Recommendations
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </>
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Step 2: AI Ranking */}
-      {step === 2 && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-medium text-foreground">AI Subcontractor Ranking</h2>
-              <p className="text-sm text-muted-foreground">Select up to 3 subcontractors for your bid package</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Select value={sortMode} onValueChange={(value) => setSortMode(value as SortMode)}>
-                <SelectTrigger className="w-[220px] h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="max-h-60 overflow-y-auto z-[100]">
-                  <SelectItem value="Recommended">Recommended</SelectItem>
-                  <SelectItem value="Distance">Distance</SelectItem>
-                  <SelectItem value="Capacity">Capacity</SelectItem>
-                  <SelectItem value="Price">Price</SelectItem>
-                </SelectContent>
-              </Select>
-              <Badge className="bg-bannett-navy">{selectedSubs.length}/3 Selected</Badge>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {visibleRecommendations.length === 0 ? (
-              <div className="p-4 rounded-lg bg-muted/50">
-                <p className="text-sm text-muted-foreground">No vendors found for the selected trade.</p>
-              </div>
-            ) : (
-              visibleRecommendations.map((sub, index) => (
-                <Card
-                  key={sub.id}
-                  className={cn(
-                    "cursor-pointer transition-all bg-card",
-                    selectedSubs.includes(sub.id) && "ring-2 ring-bannett-navy",
-                  )}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex items-center justify-center" onClick={() => toggleSubSelection(sub.id)}>
-                        <Checkbox checked={selectedSubs.includes(sub.id)} />
-                      </div>
-
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-muted-foreground">#{index + 1}</span>
-                              <h3 className="font-semibold text-card-foreground">{sub.name}</h3>
-                              <Badge variant="outline">{sub.trade}</Badge>
-                            </div>
-                            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                {sub.distance}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Star className="w-3 h-3 text-warning" />
-                                {sub.performance}% performance
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <TrendingUp className="w-3 h-3" />
-                                {sub.pricing}
-                              </span>
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Last updated: {formatShortDate(sub.updated_at)}
-                            </p>
-                          </div>
-
-                          <div className="flex items-center gap-3">
-                            <div className="text-right">
-                              <div className="flex items-center gap-1">
-                                <span className="text-2xl font-semibold text-bannett-navy">{sub.confidence}%</span>
-                              </div>
-                              <span className="text-xs text-muted-foreground">Match Score</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 mt-3">
-                          <Badge
-                            variant={sub.capacity === "High" ? "default" : "secondary"}
-                            className={sub.capacity === "High" ? "bg-success" : ""}
-                          >
-                            {sub.capacity} Capacity
-                          </Badge>
-                          <Badge
-                            variant={sub.availability === "Available" ? "default" : "secondary"}
-                            className={sub.availability === "Available" ? "bg-success" : "bg-warning text-foreground"}
-                          >
-                            {sub.availability}
-                          </Badge>
-                          <div className="flex gap-1">
-                            {sub.certifications.slice(0, 2).map((cert) => (
-                              <Badge key={cert} variant="outline" className="text-xs">
-                                <Shield className="w-3 h-3 mr-1" />
-                                {cert}
-                              </Badge>
-                            ))}
-                            {sub.certifications.length > 2 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{sub.certifications.length - 2}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <Button variant="ghost" size="sm" onClick={() => setReasoningModal(sub)}>
-                        View Details
-                        <ChevronRight className="w-4 h-4 ml-1" />
-                      </Button>
+              {/* Step Indicator */}
+              <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-2">
+                {[1, 2, 3].map((s) => (
+                  <div key={s} className="flex items-center">
+                    <div
+                      className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors",
+                        step >= s ? "bg-bannett-navy text-primary-foreground" : "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {step > s ? <Check className="w-4 h-4" /> : s}
                     </div>
+                    <span
+                      className={cn(
+                        "ml-2 text-sm hidden sm:inline",
+                        step >= s ? "text-foreground" : "text-muted-foreground",
+                      )}
+                    >
+                      {s === 1 && "Job Details"}
+                      {s === 2 && "AI Ranking"}
+                      {s === 3 && "Selection"}
+                    </span>
+                    {s < 3 && <ChevronRight className="w-4 h-4 mx-3 text-muted-foreground" />}
+                  </div>
+                ))}
+              </div>
+
+              {/* Step 1: Job Details */}
+              {step === 1 && (
+                <Card className="bg-card">
+                  <CardHeader>
+                    <CardTitle className="text-card-foreground">Job Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Project Location</Label>
+                        <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                          <MapPin className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm">{formData.location}</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Trade Category</Label>
+                        <Select
+                          value={formData.trade}
+                          onValueChange={(value) => setFormData((prev) => ({ ...prev, trade: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select trade" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="mep">MEP (Full Package)</SelectItem>
+                            <SelectItem value="electrical">Electrical</SelectItem>
+                            <SelectItem value="plumbing">Plumbing</SelectItem>
+                            <SelectItem value="hvac">HVAC</SelectItem>
+                            <SelectItem value="concrete">Concrete</SelectItem>
+                            <SelectItem value="steel">Structural Steel</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Budget Range (Min)</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                          <Input
+                            value={formData.budgetMin}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, budgetMin: e.target.value }))}
+                            className="pl-7"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Budget Range (Max)</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                          <Input
+                            value={formData.budgetMax}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, budgetMax: e.target.value }))}
+                            className="pl-7"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Timeline</Label>
+                      <Select
+                        value={formData.timeline}
+                        onValueChange={(value) => setFormData((prev) => ({ ...prev, timeline: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="3 months">3 months</SelectItem>
+                          <SelectItem value="6 months">6 months</SelectItem>
+                          <SelectItem value="9 months">9 months</SelectItem>
+                          <SelectItem value="12 months">12 months</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Special Requirements</Label>
+                      <Textarea
+                        value={formData.requirements}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, requirements: e.target.value }))}
+                        placeholder="e.g., Healthcare compliance, LEED certification, union labor..."
+                      />
+                    </div>
+
+                    <Button
+                      onClick={generateRecommendations}
+                      className="w-full bg-bannett-navy hover:bg-bannett-navy/90"
+                      disabled={!formData.trade}
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Generating Recommendations...
+                        </>
+                      ) : (
+                        <>
+                          Generate Recommendations
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </>
+                      )}
+                    </Button>
                   </CardContent>
                 </Card>
-              ))
-            )}
-          </div>
+              )}
 
-          <div className="flex justify-end">
-            <Button
-              onClick={() => setStep(3)}
-              className="bg-bannett-navy hover:bg-bannett-navy/90"
-              disabled={selectedSubs.length === 0}
-            >
-              Continue to Selection
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-
-          {/* Reasoning Card Modal */}
-          <Dialog open={!!reasoningModal} onOpenChange={() => setReasoningModal(null)}>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Building2 className="w-5 h-5" />
-                  {reasoningModal?.name}
-                </DialogTitle>
-              </DialogHeader>
-
-              {reasoningModal && (
-                <div className="space-y-6 py-4">
-                  {/* Confidence Score */}
-                  <div className="flex items-center justify-between p-4 rounded-lg bg-bannett-navy/10">
-                    <span className="font-medium text-card-foreground">AI Confidence Score</span>
-                    <div className="flex items-center gap-2">
-                      <Progress value={reasoningModal.confidence} className="w-32 h-2" />
-                      <span className="font-semibold text-bannett-navy">{reasoningModal.confidence}%</span>
+              {/* Step 2: AI Ranking */}
+              {step === 2 && (
+                <div className="space-y-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-lg font-medium text-foreground">AI Subcontractor Ranking</h2>
+                      <p className="text-sm text-muted-foreground">Select up to 3 subcontractors for your bid package</p>
+                    </div>
+                    <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1">
+                      <Select value={sortMode} onValueChange={(value) => setSortMode(value as SortMode)}>
+                        <SelectTrigger className="flex-1 md:w-[220px] h-9 min-w-[140px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60 overflow-y-auto z-[100]">
+                          <SelectItem value="Recommended">Recommended</SelectItem>
+                          <SelectItem value="Distance">Distance</SelectItem>
+                          <SelectItem value="Capacity">Capacity</SelectItem>
+                          <SelectItem value="Price">Price</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Badge className="bg-bannett-navy whitespace-nowrap shrink-0">{selectedSubs.length}/3 Selected</Badge>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="p-4 rounded-lg bg-muted/50">
-                      <p className="text-xs text-muted-foreground">Trade Fit</p>
-                      <p className="text-sm font-medium text-card-foreground mt-1">{reasoningModal.tradeFit}</p>
-                      {(reasoningModal.city || reasoningModal.state_code) && (
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Based in {reasoningModal.city ?? "—"}, {reasoningModal.state_code ?? "—"}
+                  <div className="space-y-3">
+                    {visibleRecommendations.length === 0 ? (
+                      <div className="p-4 rounded-lg bg-muted/50">
+                        <p className="text-sm text-muted-foreground">No vendors found for the selected trade.</p>
+                      </div>
+                    ) : (
+                      visibleRecommendations.map((sub, index) => (
+                        <Card
+                          key={sub.id}
+                          className={cn(
+                            "cursor-pointer transition-all bg-card",
+                            selectedSubs.includes(sub.id) && "ring-2 ring-bannett-navy",
+                          )}
+                        >
+                          <CardContent className="p-3 md:p-4 overflow-x-auto">
+                            <div className="flex items-start gap-4 min-w-[600px]">
+                              <div className="flex items-center justify-center pt-1" onClick={() => toggleSubSelection(sub.id)}>
+                                <Checkbox checked={selectedSubs.includes(sub.id)} />
+                              </div>
+
+                              <div className="flex-1">
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm font-medium text-muted-foreground">#{index + 1}</span>
+                                      <h3 className="font-semibold text-card-foreground">{sub.name}</h3>
+                                      <Badge variant="outline">{sub.trade}</Badge>
+                                    </div>
+                                    <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                      <span className="flex items-center gap-1">
+                                        <MapPin className="w-3 h-3" />
+                                        {sub.distance}
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <Star className="w-3 h-3 text-warning" />
+                                        {sub.performance}% performance
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <TrendingUp className="w-3 h-3" />
+                                        {sub.pricing}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      Last updated: {formatShortDate(sub.updated_at)}
+                                    </p>
+                                  </div>
+
+                                  <div className="flex items-center gap-3">
+                                    <div className="text-right">
+                                      <div className="flex items-center gap-1 justify-end">
+                                        <span className="text-2xl font-semibold text-bannett-navy">{sub.confidence}%</span>
+                                      </div>
+                                      <span className="text-xs text-muted-foreground">Match Score</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-4 mt-3">
+                                  <Badge
+                                    variant={sub.capacity === "High" ? "default" : "secondary"}
+                                    className={sub.capacity === "High" ? "bg-success" : ""}
+                                  >
+                                    {sub.capacity} Capacity
+                                  </Badge>
+                                  <Badge
+                                    variant={sub.availability === "Available" ? "default" : "secondary"}
+                                    className={sub.availability === "Available" ? "bg-success" : "bg-warning text-foreground"}
+                                  >
+                                    {sub.availability}
+                                  </Badge>
+                                  <div className="flex gap-1">
+                                    {sub.certifications.slice(0, 2).map((cert) => (
+                                      <Badge key={cert} variant="outline" className="text-xs">
+                                        <Shield className="w-3 h-3 mr-1" />
+                                        {cert}
+                                      </Badge>
+                                    ))}
+                                    {sub.certifications.length > 2 && (
+                                      <Badge variant="outline" className="text-xs">
+                                        +{sub.certifications.length - 2}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <Button variant="ghost" size="sm" onClick={() => setReasoningModal(sub)}>
+                                View Details
+                                <ChevronRight className="w-4 h-4 ml-1" />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={() => setStep(3)}
+                      className="bg-bannett-navy hover:bg-bannett-navy/90"
+                      disabled={selectedSubs.length === 0}
+                    >
+                      Continue to Selection
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+
+                  {/* Reasoning Card Modal */}
+                  <Dialog open={!!reasoningModal} onOpenChange={() => setReasoningModal(null)}>
+                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <Building2 className="w-5 h-5" />
+                          {reasoningModal?.name}
+                        </DialogTitle>
+                      </DialogHeader>
+
+                      {reasoningModal && (
+                        <div className="space-y-6 py-4">
+                          {/* Confidence Score */}
+                          <div className="flex items-center justify-between p-4 rounded-lg bg-bannett-navy/10">
+                            <span className="font-medium text-card-foreground">AI Confidence Score</span>
+                            <div className="flex items-center gap-2">
+                              <Progress value={reasoningModal.confidence} className="w-32 h-2" />
+                              <span className="font-semibold text-bannett-navy">{reasoningModal.confidence}%</span>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="p-4 rounded-lg bg-muted/50">
+                              <p className="text-xs text-muted-foreground">Trade Fit</p>
+                              <p className="text-sm font-medium text-card-foreground mt-1">{reasoningModal.tradeFit}</p>
+                              {(reasoningModal.city || reasoningModal.state_code) && (
+                                <p className="text-xs text-muted-foreground mt-2">
+                                  Based in {reasoningModal.city ?? "—"}, {reasoningModal.state_code ?? "—"}
+                                </p>
+                              )}
+                            </div>
+                            <div className="p-4 rounded-lg bg-muted/50">
+                              <p className="text-xs text-muted-foreground">Availability Window</p>
+                              <p className="text-sm font-medium text-card-foreground mt-1">{reasoningModal.availabilityWindow}</p>
+                              <p className="text-xs text-muted-foreground mt-2">
+                                Capacity: {reasoningModal.capacity} • Pricing: {reasoningModal.pricing}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Contact Info */}
+                          <div className="flex gap-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                const phone = reasoningModal.business_phone ?? "(503) 555-0123"
+                                try {
+                                  await navigator.clipboard.writeText(phone)
+                                  toast.success("Phone copied", { description: phone })
+                                } catch {
+                                  toast.success("Phone", { description: phone })
+                                }
+                              }}
+                            >
+                              <Phone className="w-4 h-4 mr-2" />
+                              {reasoningModal.business_phone ?? "(503) 555-0123"}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                toast.success("Contact draft created", {
+                                  description: `Prepared outreach message for ${reasoningModal.name}.`,
+                                })
+                              }}
+                            >
+                              <Mail className="w-4 h-4 mr-2" />
+                              Contact
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setReasoningModal(null)
+                                setVendorProfileId(reasoningModal.id)
+                              }}
+                            >
+                              <ExternalLink className="w-4 h-4 mr-2" />
+                              Directory Profile
+                            </Button>
+                          </div>
+
+                          {/* Strengths */}
+                          <div>
+                            <h4 className="font-medium mb-2 flex items-center gap-2 text-card-foreground">
+                              <ThumbsUp className="w-4 h-4 text-success" />
+                              Strengths
+                            </h4>
+                            <ul className="space-y-1">
+                              {reasoningModal.strengths.map((s, i) => (
+                                <li key={i} className="text-sm text-muted-foreground flex items-center gap-2">
+                                  <Check className="w-3 h-3 text-success" />
+                                  {s}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          {/* Weaknesses */}
+                          <div>
+                            <h4 className="font-medium mb-2 flex items-center gap-2 text-card-foreground">
+                              <ThumbsDown className="w-4 h-4 text-destructive" />
+                              Weaknesses
+                            </h4>
+                            <ul className="space-y-1">
+                              {reasoningModal.weaknesses.map((w, i) => (
+                                <li key={i} className="text-sm text-muted-foreground flex items-center gap-2">
+                                  <AlertCircle className="w-3 h-3 text-warning" />
+                                  {w}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          {/* Past Projects */}
+                          <div>
+                            <h4 className="font-medium mb-2 text-card-foreground">Past Work</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {reasoningModal.pastProjects.map((p, i) => (
+                                <Badge key={i} variant="secondary">
+                                  {p}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Certifications */}
+                          <div>
+                            <h4 className="font-medium mb-2 text-card-foreground">Certifications</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {reasoningModal.certifications.map((c, i) => (
+                                <Badge key={i} variant="outline">
+                                  <Shield className="w-3 h-3 mr-1" />
+                                  {c}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Risk Factors */}
+                          <div className="p-3 rounded-lg bg-warning/10">
+                            <h4 className="font-medium mb-2 flex items-center gap-2 text-card-foreground">
+                              <AlertCircle className="w-4 h-4 text-warning" />
+                              Risk Flags
+                            </h4>
+                            <ul className="space-y-1">
+                              {reasoningModal.riskFactors.map((r, i) => (
+                                <li key={i} className="text-sm text-muted-foreground">
+                                  {r}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setReasoningModal(null)}>
+                          Close
+                        </Button>
+                        <Button
+                          className="bg-bannett-navy hover:bg-bannett-navy/90"
+                          onClick={() => {
+                            if (reasoningModal) {
+                              toggleSubSelection(reasoningModal.id)
+                              setReasoningModal(null)
+                            }
+                          }}
+                        >
+                          {reasoningModal && selectedSubs.includes(reasoningModal.id)
+                            ? "Remove from Selection"
+                            : "Add to Selection"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              )}
+
+              {/* Step 3: Selection Confirmation */}
+              {step === 3 && (
+                <Card className="bg-card">
+                  <CardHeader>
+                    <CardTitle className="text-card-foreground">Confirm Selection</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div>
+                      <h3 className="font-medium mb-3 text-card-foreground">Selected Subcontractors</h3>
+                      <div className="space-y-3">
+                        {selectedRecommendations.length === 0 ? (
+                          <div className="p-4 rounded-lg bg-muted/50">
+                            <p className="text-sm text-muted-foreground">No subcontractors selected.</p>
+                          </div>
+                        ) : (
+                          selectedRecommendations.map((sub) => (
+                            <div key={sub.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-bannett-navy flex items-center justify-center">
+                                  <Building2 className="w-5 h-5 text-primary-foreground" />
+                                </div>
+                                <div>
+                                  <p className="font-medium text-card-foreground">{sub.name}</p>
+                                  <p className="text-sm text-muted-foreground">{sub.trade}</p>
+                                </div>
+                              </div>
+                              <Badge className="bg-bannett-navy">{sub.confidence}% match</Badge>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Bid Package</Label>
+                      {bidPackagesLoading ? (
+                        <div className="p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground">Loading bid packages…</div>
+                      ) : bidPackages.length === 0 ? (
+                        <div className="p-3 rounded-lg bg-warning/10 text-sm text-card-foreground">
+                          No bid packages found for this project. Create one in Procore (Bidding → Bid Packages) to push bidders.
+                        </div>
+                      ) : (
+                        <Select
+                          value={selectedBidPackageId ? String(selectedBidPackageId) : ""}
+                          onValueChange={(value) => setSelectedBidPackageId(Number(value))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a bid package" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-60 overflow-y-auto z-[100]">
+                            {bidPackages.map((bp) => (
+                              <SelectItem key={bp.id} value={String(bp.id)}>
+                                {bp.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                      <p className="text-xs text-muted-foreground">Mock push adds bidders to a Procore bid package.</p>
+                      {selectedBidPackage && (
+                        <p className="text-xs text-muted-foreground">
+                          Status: {selectedBidPackage.status}
+                          {" • "}
+                          Due: {selectedBidPackage.due_date ?? "—"}
+                          {" • "}
+                          Updated: {formatShortDate(selectedBidPackage.updated_at)}
                         </p>
                       )}
                     </div>
+
+                    <div className="space-y-2">
+                      <Label>Notes for Bid Package</Label>
+                      <Textarea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="Add any notes or special instructions for this bid package..."
+                        rows={4}
+                      />
+                    </div>
+
                     <div className="p-4 rounded-lg bg-muted/50">
-                      <p className="text-xs text-muted-foreground">Availability Window</p>
-                      <p className="text-sm font-medium text-card-foreground mt-1">{reasoningModal.availabilityWindow}</p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Capacity: {reasoningModal.capacity} • Pricing: {reasoningModal.pricing}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Contact Info */}
-                  <div className="flex gap-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        const phone = reasoningModal.business_phone ?? "(503) 555-0123"
-                        try {
-                          await navigator.clipboard.writeText(phone)
-                          toast.success("Phone copied", { description: phone })
-                        } catch {
-                          toast.success("Phone", { description: phone })
-                        }
-                      }}
-                    >
-                      <Phone className="w-4 h-4 mr-2" />
-                      {reasoningModal.business_phone ?? "(503) 555-0123"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        toast.success("Contact draft created", {
-                          description: `Prepared outreach message for ${reasoningModal.name}.`,
-                        })
-                      }}
-                    >
-                      <Mail className="w-4 h-4 mr-2" />
-                      Contact
-                    </Button>
-	                  <Button
-	                    variant="outline"
-	                    size="sm"
-	                    onClick={() => {
-	                      setReasoningModal(null)
-	                      setVendorProfileId(reasoningModal.id)
-	                    }}
-	                  >
-	                    <ExternalLink className="w-4 h-4 mr-2" />
-	                    Directory Profile
-	                  </Button>
-                  </div>
-
-                  {/* Strengths */}
-                  <div>
-                    <h4 className="font-medium mb-2 flex items-center gap-2 text-card-foreground">
-                      <ThumbsUp className="w-4 h-4 text-success" />
-                      Strengths
-                    </h4>
-                    <ul className="space-y-1">
-                      {reasoningModal.strengths.map((s, i) => (
-                        <li key={i} className="text-sm text-muted-foreground flex items-center gap-2">
-                          <Check className="w-3 h-3 text-success" />
-                          {s}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Weaknesses */}
-                  <div>
-                    <h4 className="font-medium mb-2 flex items-center gap-2 text-card-foreground">
-                      <ThumbsDown className="w-4 h-4 text-destructive" />
-                      Weaknesses
-                    </h4>
-                    <ul className="space-y-1">
-                      {reasoningModal.weaknesses.map((w, i) => (
-                        <li key={i} className="text-sm text-muted-foreground flex items-center gap-2">
-                          <AlertCircle className="w-3 h-3 text-warning" />
-                          {w}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Past Projects */}
-                  <div>
-                    <h4 className="font-medium mb-2 text-card-foreground">Past Work</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {reasoningModal.pastProjects.map((p, i) => (
-                        <Badge key={i} variant="secondary">
-                          {p}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Certifications */}
-                  <div>
-                    <h4 className="font-medium mb-2 text-card-foreground">Certifications</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {reasoningModal.certifications.map((c, i) => (
-                        <Badge key={i} variant="outline">
-                          <Shield className="w-3 h-3 mr-1" />
-                          {c}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Risk Factors */}
-                  <div className="p-3 rounded-lg bg-warning/10">
-                    <h4 className="font-medium mb-2 flex items-center gap-2 text-card-foreground">
-                      <AlertCircle className="w-4 h-4 text-warning" />
-                      Risk Flags
-                    </h4>
-                    <ul className="space-y-1">
-                      {reasoningModal.riskFactors.map((r, i) => (
-                        <li key={i} className="text-sm text-muted-foreground">
-                          {r}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )}
-
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setReasoningModal(null)}>
-                  Close
-                </Button>
-                <Button
-                  className="bg-bannett-navy hover:bg-bannett-navy/90"
-                  onClick={() => {
-                    if (reasoningModal) {
-                      toggleSubSelection(reasoningModal.id)
-                      setReasoningModal(null)
-                    }
-                  }}
-                >
-                  {reasoningModal && selectedSubs.includes(reasoningModal.id)
-                    ? "Remove from Selection"
-                    : "Add to Selection"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      )}
-
-      {/* Step 3: Selection Confirmation */}
-      {step === 3 && (
-        <Card className="bg-card">
-          <CardHeader>
-            <CardTitle className="text-card-foreground">Confirm Selection</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <h3 className="font-medium mb-3 text-card-foreground">Selected Subcontractors</h3>
-              <div className="space-y-3">
-                {selectedRecommendations.length === 0 ? (
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <p className="text-sm text-muted-foreground">No subcontractors selected.</p>
-                  </div>
-                ) : (
-                  selectedRecommendations.map((sub) => (
-                    <div key={sub.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-bannett-navy flex items-center justify-center">
-                          <Building2 className="w-5 h-5 text-primary-foreground" />
+                      <h4 className="font-medium mb-2 text-card-foreground">Bid Package Summary</h4>
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>Trade</span>
+                          <span className="font-medium text-card-foreground">{formData.trade.toUpperCase()}</span>
                         </div>
-                        <div>
-                          <p className="font-medium text-card-foreground">{sub.name}</p>
-                          <p className="text-sm text-muted-foreground">{sub.trade}</p>
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>Budget Range</span>
+                          <span className="font-medium text-card-foreground">
+                            ${Number.parseInt(formData.budgetMin).toLocaleString()} - $
+                            {Number.parseInt(formData.budgetMax).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>Timeline</span>
+                          <span className="font-medium text-card-foreground">{formData.timeline}</span>
+                        </div>
+                        <div className="flex justify-between text-muted-foreground">
+                          <span>Subcontractors</span>
+                          <span className="font-medium text-card-foreground">{selectedSubs.length}</span>
                         </div>
                       </div>
-                      <Badge className="bg-bannett-navy">{sub.confidence}% match</Badge>
                     </div>
-                  ))
-                )}
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label>Bid Package</Label>
-              {bidPackagesLoading ? (
-                <div className="p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground">Loading bid packages…</div>
-              ) : bidPackages.length === 0 ? (
-                <div className="p-3 rounded-lg bg-warning/10 text-sm text-card-foreground">
-                  No bid packages found for this project. Create one in Procore (Bidding → Bid Packages) to push bidders.
+                    <Button
+                      onClick={pushToProcore}
+                      className="w-full bg-bannett-navy hover:bg-bannett-navy/90"
+                      disabled={isPushing || bidPackagesLoading || bidPackages.length === 0 || !selectedBidPackageId}
+                    >
+                      {isPushing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Pushing…
+                        </>
+                      ) : (
+                        <>
+                          Push to Procore Bid Package
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Directory vendor profile (mock) */}
+      <Dialog open={vendorProfileId !== null} onOpenChange={(open) => !open && setVendorProfileId(null)}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex flex-col gap-1">
+              <span className="flex items-center gap-2">
+                <Building2 className="w-5 h-5" />
+                {activeVendorProfile?.name ?? "Vendor Profile"}
+              </span>
+              {activeVendorProfile && (
+                <span className="text-xs text-muted-foreground">
+                  Mentioned in Directory • Vendor ID {activeVendorProfile.vendor_id}
+                  {activeVendorProfile.trade ? ` • ${activeVendorProfile.trade}` : ""}
+                </span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+
+          {!activeVendorProfile ? (
+            <div className="p-4 rounded-lg bg-muted/50 text-sm text-muted-foreground">Loading vendor profile…</div>
+          ) : (
+            <Tabs key={activeVendorProfile.vendor_id} defaultValue="overview" className="mt-2">
+              <TabsList className="flex w-full overflow-x-auto justify-start h-auto">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="contacts">Contacts</TabsTrigger>
+                <TabsTrigger value="compliance">Compliance</TabsTrigger>
+                <TabsTrigger value="past">Past Work</TabsTrigger>
+                <TabsTrigger value="notes">Notes</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overview" className="mt-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground">Location</p>
+                    <p className="text-sm font-medium text-card-foreground mt-1">
+                      {[activeVendorProfile.city, activeVendorProfile.state_code].filter(Boolean).join(", ") || "—"}
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground">Phone</p>
+                    <p className="text-sm font-medium text-card-foreground mt-1">{activeVendorProfile.business_phone ?? "—"}</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground">Website</p>
+                    <p className="text-sm font-medium text-card-foreground mt-1 break-all">{activeVendorProfile.website}</p>
+                  </div>
                 </div>
-              ) : (
-                <Select
-                  value={selectedBidPackageId ? String(selectedBidPackageId) : ""}
-                  onValueChange={(value) => setSelectedBidPackageId(Number(value))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a bid package" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 overflow-y-auto z-[100]">
-                    {bidPackages.map((bp) => (
-                      <SelectItem key={bp.id} value={String(bp.id)}>
-                        {bp.title}
-                      </SelectItem>
+
+                <div className="p-4 rounded-lg bg-bannett-navy/10">
+                  <p className="text-sm font-medium text-card-foreground">Trade fit for this project</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Deterministic profile based on vendor + project context. Use for feasibility / UX validation.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {activeVendorProfile.tags.map((t) => (
+                      <Badge key={t} variant="secondary">
+                        {t}
+                      </Badge>
                     ))}
-                  </SelectContent>
-                </Select>
-              )}
-              <p className="text-xs text-muted-foreground">Mock push adds bidders to a Procore bid package.</p>
-              {selectedBidPackage && (
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground">Insurance status</p>
+                    <div className="mt-2 space-y-2">
+                      {activeVendorProfile.insurance.map((row) => (
+                        <div key={row.type} className="flex items-center justify-between gap-3">
+                          <span className="text-sm text-card-foreground">{row.type}</span>
+                          <Badge
+                            className={cn(
+                              row.status === "Active"
+                                ? "bg-success text-primary-foreground"
+                                : row.status === "Expiring"
+                                  ? "bg-warning text-foreground"
+                                  : "bg-destructive text-primary-foreground",
+                            )}
+                          >
+                            {row.status}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground">Safety metrics</p>
+                    <div className="mt-2 space-y-2">
+                      {activeVendorProfile.safety.map((row) => (
+                        <div key={row.metric} className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-card-foreground">{row.metric}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{row.notes}</p>
+                          </div>
+                          <span className="text-sm text-card-foreground">{row.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="contacts" className="mt-4 space-y-4">
+                <div className="border rounded-lg overflow-hidden overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="text-left p-3 text-xs font-medium text-muted-foreground">Name</th>
+                        <th className="text-left p-3 text-xs font-medium text-muted-foreground">Role</th>
+                        <th className="text-left p-3 text-xs font-medium text-muted-foreground">Email</th>
+                        <th className="text-left p-3 text-xs font-medium text-muted-foreground">Phone</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activeVendorProfile.contacts.map((c) => (
+                        <tr key={c.email} className="border-t">
+                          <td className="p-3 font-medium text-card-foreground">{c.name}</td>
+                          <td className="p-3 text-muted-foreground">{c.role}</td>
+                          <td className="p-3">
+                            <button
+                              type="button"
+                              className="text-bannett-navy hover:underline"
+                              onClick={() => toast.success("Draft email created", { description: `Prepared message for ${c.email}` })}
+                            >
+                              {c.email}
+                            </button>
+                          </td>
+                          <td className="p-3">
+                            <button
+                              type="button"
+                              className="text-bannett-navy hover:underline"
+                              onClick={async () => {
+                                try {
+                                  await navigator.clipboard.writeText(c.phone)
+                                  toast.success("Phone copied", { description: c.phone })
+                                } catch {
+                                  toast.message("Phone", { description: c.phone })
+                                }
+                              }}
+                            >
+                              {c.phone}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  Status: {selectedBidPackage.status}
-                  {" • "}
-                  Due: {selectedBidPackage.due_date ?? "—"}
-                  {" • "}
-                  Updated: {formatShortDate(selectedBidPackage.updated_at)}
+                  Mirrors Procore Directory vendor contacts behavior (mocked, deterministic).
                 </p>
-              )}
+              </TabsContent>
+
+              <TabsContent value="compliance" className="mt-4 space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <p className="text-sm font-medium text-card-foreground">Insurance</p>
+                    <div className="mt-3 space-y-3">
+                      {activeVendorProfile.insurance.map((row) => (
+                        <div key={row.type} className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-card-foreground">{row.type}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Policy {row.policy_number} • Expires {row.expires_on}
+                            </p>
+                          </div>
+                          <Badge
+                            className={cn(
+                              row.status === "Active"
+                                ? "bg-success text-primary-foreground"
+                                : row.status === "Expiring"
+                                  ? "bg-warning text-foreground"
+                                  : "bg-destructive text-primary-foreground",
+                            )}
+                          >
+                            {row.status}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <p className="text-sm font-medium text-card-foreground">Licenses & docs</p>
+                    <div className="mt-3 space-y-3">
+                      {activeVendorProfile.licenses.map((row) => (
+                        <div key={row.label} className="flex items-center justify-between gap-3">
+                          <span className="text-sm text-card-foreground">{row.label}</span>
+                          <span className="text-sm text-muted-foreground">{row.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4 rounded-lg bg-muted/50">
+                  <p className="text-sm font-medium text-card-foreground">Safety</p>
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {activeVendorProfile.safety.map((row) => (
+                      <div key={row.metric} className="p-3 rounded-lg bg-background">
+                        <p className="text-xs text-muted-foreground">{row.metric}</p>
+                        <p className="text-sm font-medium text-card-foreground mt-1">{row.value}</p>
+                        <p className="text-xs text-muted-foreground mt-2">{row.notes}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="past" className="mt-4 space-y-4">
+                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+                  <div className="space-y-2">
+                    <Label>Search past work</Label>
+                    <Input value={profilePastSearch} onChange={(e) => setProfilePastSearch(e.target.value)} placeholder="Search projects…" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Sort</Label>
+                    <Select value={profilePastSort} onValueChange={(v) => setProfilePastSort(v as typeof profilePastSort)}>
+                      <SelectTrigger className="w-[220px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60 overflow-y-auto z-[100]">
+                        <SelectItem value="year_desc">Year (newest)</SelectItem>
+                        <SelectItem value="year_asc">Year (oldest)</SelectItem>
+                        <SelectItem value="value_desc">Contract value</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="border rounded-lg overflow-hidden overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="text-left p-3 text-xs font-medium text-muted-foreground">Project</th>
+                        <th className="text-left p-3 text-xs font-medium text-muted-foreground">Role</th>
+                        <th className="text-left p-3 text-xs font-medium text-muted-foreground">Year</th>
+                        <th className="text-left p-3 text-xs font-medium text-muted-foreground">Value</th>
+                        <th className="text-left p-3 text-xs font-medium text-muted-foreground">Perf</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {profilePastRows.items.length === 0 ? (
+                        <tr className="border-t">
+                          <td className="p-4 text-sm text-muted-foreground" colSpan={5}>
+                            No past work matches your search.
+                          </td>
+                        </tr>
+                      ) : (
+                        profilePastRows.items.map((row) => (
+                          <tr key={`${row.project}-${row.year}`} className="border-t">
+                            <td className="p-3 font-medium text-card-foreground">{row.project}</td>
+                            <td className="p-3 text-muted-foreground">{row.role}</td>
+                            <td className="p-3 text-muted-foreground">{row.year}</td>
+                            <td className="p-3 text-card-foreground">${Math.round(row.value).toLocaleString()}</td>
+                            <td className="p-3">
+                              <Badge variant="secondary">{row.performance}%</Badge>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">
+                    Page {Math.min(profilePastPage, profilePastRows.total_pages)} of {profilePastRows.total_pages}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={profilePastPage <= 1}
+                      onClick={() => setProfilePastPage((p) => Math.max(1, p - 1))}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={profilePastPage >= profilePastRows.total_pages}
+                      onClick={() => setProfilePastPage((p) => Math.min(profilePastRows.total_pages, p + 1))}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="notes" className="mt-4 space-y-4">
+                <div className="space-y-2">
+                  <Label>Add note</Label>
+                  <Textarea
+                    value={vendorNoteDraft}
+                    onChange={(e) => setVendorNoteDraft(e.target.value)}
+                    placeholder="Add a note visible to Bannett team members..."
+                    rows={3}
+                  />
+                  <div className="flex items-center justify-end gap-2">
+                    <Button variant="outline" onClick={() => setVendorNoteDraft("")} disabled={!vendorNoteDraft.trim()}>
+                      Clear
+                    </Button>
+                    <Button className="bg-bannett-navy hover:bg-bannett-navy/90" onClick={addVendorNote} disabled={!vendorNoteDraft.trim()}>
+                      Save Note
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-card-foreground">Vendor notes</p>
+                  {(vendorNotesById[activeVendorProfile.vendor_id] ?? []).length === 0 ? (
+                    <div className="p-4 rounded-lg bg-muted/50 text-sm text-muted-foreground">No notes yet.</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {(vendorNotesById[activeVendorProfile.vendor_id] ?? []).map((note, idx) => (
+                        <div key={`${idx}-${note.slice(0, 12)}`} className="p-3 rounded-lg bg-muted/50">
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="text-sm text-card-foreground whitespace-pre-wrap">{note}</p>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => removeVendorNote(activeVendorProfile.vendor_id, idx)}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
+
+          <DialogFooter className="gap-2">
+            <div className="mr-auto text-xs text-muted-foreground">
+              Directory profile is mocked — fields align to Procore Directory shapes.
             </div>
-
-            <div className="space-y-2">
-              <Label>Notes for Bid Package</Label>
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Add any notes or special instructions for this bid package..."
-                rows={4}
-              />
-            </div>
-
-            <div className="p-4 rounded-lg bg-muted/50">
-              <h4 className="font-medium mb-2 text-card-foreground">Bid Package Summary</h4>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Trade</span>
-                  <span className="font-medium text-card-foreground">{formData.trade.toUpperCase()}</span>
-                </div>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Budget Range</span>
-                  <span className="font-medium text-card-foreground">
-                    ${Number.parseInt(formData.budgetMin).toLocaleString()} - $
-                    {Number.parseInt(formData.budgetMax).toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Timeline</span>
-                  <span className="font-medium text-card-foreground">{formData.timeline}</span>
-                </div>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Subcontractors</span>
-                  <span className="font-medium text-card-foreground">{selectedSubs.length}</span>
-                </div>
-              </div>
-            </div>
-
-            <Button
-              onClick={pushToProcore}
-              className="w-full bg-bannett-navy hover:bg-bannett-navy/90"
-              disabled={isPushing || bidPackagesLoading || bidPackages.length === 0 || !selectedBidPackageId}
-            >
-              {isPushing ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Pushing…
-                </>
-              ) : (
-                <>
-                  Push to Procore Bid Package
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </>
-              )}
-	            </Button>
-	          </CardContent>
-	        </Card>
-	      )}
-	            </>
-	          )}
-	        </CardContent>
-	      </Card>
-
-	      {/* Directory vendor profile (mock) */}
-	      <Dialog open={vendorProfileId !== null} onOpenChange={(open) => !open && setVendorProfileId(null)}>
-	        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
-	          <DialogHeader>
-	            <DialogTitle className="flex flex-col gap-1">
-	              <span className="flex items-center gap-2">
-	                <Building2 className="w-5 h-5" />
-	                {activeVendorProfile?.name ?? "Vendor Profile"}
-	              </span>
-	              {activeVendorProfile && (
-	                <span className="text-xs text-muted-foreground">
-	                  Mentioned in Directory • Vendor ID {activeVendorProfile.vendor_id}
-	                  {activeVendorProfile.trade ? ` • ${activeVendorProfile.trade}` : ""}
-	                </span>
-	              )}
-	            </DialogTitle>
-	          </DialogHeader>
-
-	          {!activeVendorProfile ? (
-	            <div className="p-4 rounded-lg bg-muted/50 text-sm text-muted-foreground">Loading vendor profile…</div>
-	          ) : (
-	            <Tabs key={activeVendorProfile.vendor_id} defaultValue="overview" className="mt-2">
-	              <TabsList className="grid grid-cols-5 w-full">
-	                <TabsTrigger value="overview">Overview</TabsTrigger>
-	                <TabsTrigger value="contacts">Contacts</TabsTrigger>
-	                <TabsTrigger value="compliance">Compliance</TabsTrigger>
-	                <TabsTrigger value="past">Past Work</TabsTrigger>
-	                <TabsTrigger value="notes">Notes</TabsTrigger>
-	              </TabsList>
-
-	              <TabsContent value="overview" className="mt-4 space-y-4">
-	                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-	                  <div className="p-4 rounded-lg bg-muted/50">
-	                    <p className="text-xs text-muted-foreground">Location</p>
-	                    <p className="text-sm font-medium text-card-foreground mt-1">
-	                      {[activeVendorProfile.city, activeVendorProfile.state_code].filter(Boolean).join(", ") || "—"}
-	                    </p>
-	                  </div>
-	                  <div className="p-4 rounded-lg bg-muted/50">
-	                    <p className="text-xs text-muted-foreground">Phone</p>
-	                    <p className="text-sm font-medium text-card-foreground mt-1">{activeVendorProfile.business_phone ?? "—"}</p>
-	                  </div>
-	                  <div className="p-4 rounded-lg bg-muted/50">
-	                    <p className="text-xs text-muted-foreground">Website</p>
-	                    <p className="text-sm font-medium text-card-foreground mt-1 break-all">{activeVendorProfile.website}</p>
-	                  </div>
-	                </div>
-
-	                <div className="p-4 rounded-lg bg-bannett-navy/10">
-	                  <p className="text-sm font-medium text-card-foreground">Trade fit for this project</p>
-	                  <p className="text-sm text-muted-foreground mt-1">
-	                    Deterministic profile based on vendor + project context. Use for feasibility / UX validation.
-	                  </p>
-	                  <div className="flex flex-wrap gap-2 mt-3">
-	                    {activeVendorProfile.tags.map((t) => (
-	                      <Badge key={t} variant="secondary">
-	                        {t}
-	                      </Badge>
-	                    ))}
-	                  </div>
-	                </div>
-
-	                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-	                  <div className="p-4 rounded-lg bg-muted/50">
-	                    <p className="text-xs text-muted-foreground">Insurance status</p>
-	                    <div className="mt-2 space-y-2">
-	                      {activeVendorProfile.insurance.map((row) => (
-	                        <div key={row.type} className="flex items-center justify-between gap-3">
-	                          <span className="text-sm text-card-foreground">{row.type}</span>
-	                          <Badge
-	                            className={cn(
-	                              row.status === "Active"
-	                                ? "bg-success text-primary-foreground"
-	                                : row.status === "Expiring"
-	                                  ? "bg-warning text-foreground"
-	                                  : "bg-destructive text-primary-foreground",
-	                            )}
-	                          >
-	                            {row.status}
-	                          </Badge>
-	                        </div>
-	                      ))}
-	                    </div>
-	                  </div>
-	                  <div className="p-4 rounded-lg bg-muted/50">
-	                    <p className="text-xs text-muted-foreground">Safety metrics</p>
-	                    <div className="mt-2 space-y-2">
-	                      {activeVendorProfile.safety.map((row) => (
-	                        <div key={row.metric} className="flex items-start justify-between gap-3">
-	                          <div className="min-w-0">
-	                            <p className="text-sm font-medium text-card-foreground">{row.metric}</p>
-	                            <p className="text-xs text-muted-foreground mt-1">{row.notes}</p>
-	                          </div>
-	                          <span className="text-sm text-card-foreground">{row.value}</span>
-	                        </div>
-	                      ))}
-	                    </div>
-	                  </div>
-	                </div>
-	              </TabsContent>
-
-	              <TabsContent value="contacts" className="mt-4 space-y-4">
-	                <div className="border rounded-lg overflow-hidden">
-	                  <table className="w-full text-sm">
-	                    <thead className="bg-muted/50">
-	                      <tr>
-	                        <th className="text-left p-3 text-xs font-medium text-muted-foreground">Name</th>
-	                        <th className="text-left p-3 text-xs font-medium text-muted-foreground">Role</th>
-	                        <th className="text-left p-3 text-xs font-medium text-muted-foreground">Email</th>
-	                        <th className="text-left p-3 text-xs font-medium text-muted-foreground">Phone</th>
-	                      </tr>
-	                    </thead>
-	                    <tbody>
-	                      {activeVendorProfile.contacts.map((c) => (
-	                        <tr key={c.email} className="border-t">
-	                          <td className="p-3 font-medium text-card-foreground">{c.name}</td>
-	                          <td className="p-3 text-muted-foreground">{c.role}</td>
-	                          <td className="p-3">
-	                            <button
-	                              type="button"
-	                              className="text-bannett-navy hover:underline"
-	                              onClick={() => toast.success("Draft email created", { description: `Prepared message for ${c.email}` })}
-	                            >
-	                              {c.email}
-	                            </button>
-	                          </td>
-	                          <td className="p-3">
-	                            <button
-	                              type="button"
-	                              className="text-bannett-navy hover:underline"
-	                              onClick={async () => {
-	                                try {
-	                                  await navigator.clipboard.writeText(c.phone)
-	                                  toast.success("Phone copied", { description: c.phone })
-	                                } catch {
-	                                  toast.message("Phone", { description: c.phone })
-	                                }
-	                              }}
-	                            >
-	                              {c.phone}
-	                            </button>
-	                          </td>
-	                        </tr>
-	                      ))}
-	                    </tbody>
-	                  </table>
-	                </div>
-	                <p className="text-xs text-muted-foreground">
-	                  Mirrors Procore Directory vendor contacts behavior (mocked, deterministic).
-	                </p>
-	              </TabsContent>
-
-	              <TabsContent value="compliance" className="mt-4 space-y-4">
-	                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-	                  <div className="p-4 rounded-lg bg-muted/50">
-	                    <p className="text-sm font-medium text-card-foreground">Insurance</p>
-	                    <div className="mt-3 space-y-3">
-	                      {activeVendorProfile.insurance.map((row) => (
-	                        <div key={row.type} className="flex items-start justify-between gap-3">
-	                          <div className="min-w-0">
-	                            <p className="text-sm font-medium text-card-foreground">{row.type}</p>
-	                            <p className="text-xs text-muted-foreground mt-1">
-	                              Policy {row.policy_number} • Expires {row.expires_on}
-	                            </p>
-	                          </div>
-	                          <Badge
-	                            className={cn(
-	                              row.status === "Active"
-	                                ? "bg-success text-primary-foreground"
-	                                : row.status === "Expiring"
-	                                  ? "bg-warning text-foreground"
-	                                  : "bg-destructive text-primary-foreground",
-	                            )}
-	                          >
-	                            {row.status}
-	                          </Badge>
-	                        </div>
-	                      ))}
-	                    </div>
-	                  </div>
-	                  <div className="p-4 rounded-lg bg-muted/50">
-	                    <p className="text-sm font-medium text-card-foreground">Licenses & docs</p>
-	                    <div className="mt-3 space-y-3">
-	                      {activeVendorProfile.licenses.map((row) => (
-	                        <div key={row.label} className="flex items-center justify-between gap-3">
-	                          <span className="text-sm text-card-foreground">{row.label}</span>
-	                          <span className="text-sm text-muted-foreground">{row.value}</span>
-	                        </div>
-	                      ))}
-	                    </div>
-	                  </div>
-	                </div>
-	                <div className="p-4 rounded-lg bg-muted/50">
-	                  <p className="text-sm font-medium text-card-foreground">Safety</p>
-	                  <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
-	                    {activeVendorProfile.safety.map((row) => (
-	                      <div key={row.metric} className="p-3 rounded-lg bg-background">
-	                        <p className="text-xs text-muted-foreground">{row.metric}</p>
-	                        <p className="text-sm font-medium text-card-foreground mt-1">{row.value}</p>
-	                        <p className="text-xs text-muted-foreground mt-2">{row.notes}</p>
-	                      </div>
-	                    ))}
-	                  </div>
-	                </div>
-	              </TabsContent>
-
-	              <TabsContent value="past" className="mt-4 space-y-4">
-	                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
-	                  <div className="space-y-2">
-	                    <Label>Search past work</Label>
-	                    <Input value={profilePastSearch} onChange={(e) => setProfilePastSearch(e.target.value)} placeholder="Search projects…" />
-	                  </div>
-	                  <div className="space-y-2">
-	                    <Label>Sort</Label>
-	                    <Select value={profilePastSort} onValueChange={(v) => setProfilePastSort(v as typeof profilePastSort)}>
-	                      <SelectTrigger className="w-[220px]">
-	                        <SelectValue />
-	                      </SelectTrigger>
-	                      <SelectContent className="max-h-60 overflow-y-auto z-[100]">
-	                        <SelectItem value="year_desc">Year (newest)</SelectItem>
-	                        <SelectItem value="year_asc">Year (oldest)</SelectItem>
-	                        <SelectItem value="value_desc">Contract value</SelectItem>
-	                      </SelectContent>
-	                    </Select>
-	                  </div>
-	                </div>
-
-	                <div className="border rounded-lg overflow-hidden">
-	                  <table className="w-full text-sm">
-	                    <thead className="bg-muted/50">
-	                      <tr>
-	                        <th className="text-left p-3 text-xs font-medium text-muted-foreground">Project</th>
-	                        <th className="text-left p-3 text-xs font-medium text-muted-foreground">Role</th>
-	                        <th className="text-left p-3 text-xs font-medium text-muted-foreground">Year</th>
-	                        <th className="text-left p-3 text-xs font-medium text-muted-foreground">Value</th>
-	                        <th className="text-left p-3 text-xs font-medium text-muted-foreground">Perf</th>
-	                      </tr>
-	                    </thead>
-	                    <tbody>
-	                      {profilePastRows.items.length === 0 ? (
-	                        <tr className="border-t">
-	                          <td className="p-4 text-sm text-muted-foreground" colSpan={5}>
-	                            No past work matches your search.
-	                          </td>
-	                        </tr>
-	                      ) : (
-	                        profilePastRows.items.map((row) => (
-	                          <tr key={`${row.project}-${row.year}`} className="border-t">
-	                            <td className="p-3 font-medium text-card-foreground">{row.project}</td>
-	                            <td className="p-3 text-muted-foreground">{row.role}</td>
-	                            <td className="p-3 text-muted-foreground">{row.year}</td>
-	                            <td className="p-3 text-card-foreground">${Math.round(row.value).toLocaleString()}</td>
-	                            <td className="p-3">
-	                              <Badge variant="secondary">{row.performance}%</Badge>
-	                            </td>
-	                          </tr>
-	                        ))
-	                      )}
-	                    </tbody>
-	                  </table>
-	                </div>
-
-	                <div className="flex items-center justify-between">
-	                  <p className="text-xs text-muted-foreground">
-	                    Page {Math.min(profilePastPage, profilePastRows.total_pages)} of {profilePastRows.total_pages}
-	                  </p>
-	                  <div className="flex items-center gap-2">
-	                    <Button
-	                      size="sm"
-	                      variant="outline"
-	                      disabled={profilePastPage <= 1}
-	                      onClick={() => setProfilePastPage((p) => Math.max(1, p - 1))}
-	                    >
-	                      Previous
-	                    </Button>
-	                    <Button
-	                      size="sm"
-	                      variant="outline"
-	                      disabled={profilePastPage >= profilePastRows.total_pages}
-	                      onClick={() => setProfilePastPage((p) => Math.min(profilePastRows.total_pages, p + 1))}
-	                    >
-	                      Next
-	                    </Button>
-	                  </div>
-	                </div>
-	              </TabsContent>
-
-	              <TabsContent value="notes" className="mt-4 space-y-4">
-	                <div className="space-y-2">
-	                  <Label>Add note</Label>
-	                  <Textarea
-	                    value={vendorNoteDraft}
-	                    onChange={(e) => setVendorNoteDraft(e.target.value)}
-	                    placeholder="Add a note visible to Bannett team members..."
-	                    rows={3}
-	                  />
-	                  <div className="flex items-center justify-end gap-2">
-	                    <Button variant="outline" onClick={() => setVendorNoteDraft("")} disabled={!vendorNoteDraft.trim()}>
-	                      Clear
-	                    </Button>
-	                    <Button className="bg-bannett-navy hover:bg-bannett-navy/90" onClick={addVendorNote} disabled={!vendorNoteDraft.trim()}>
-	                      Save Note
-	                    </Button>
-	                  </div>
-	                </div>
-
-	                <div className="space-y-2">
-	                  <p className="text-sm font-medium text-card-foreground">Vendor notes</p>
-	                  {(vendorNotesById[activeVendorProfile.vendor_id] ?? []).length === 0 ? (
-	                    <div className="p-4 rounded-lg bg-muted/50 text-sm text-muted-foreground">No notes yet.</div>
-	                  ) : (
-	                    <div className="space-y-2">
-	                      {(vendorNotesById[activeVendorProfile.vendor_id] ?? []).map((note, idx) => (
-	                        <div key={`${idx}-${note.slice(0, 12)}`} className="p-3 rounded-lg bg-muted/50">
-	                          <div className="flex items-start justify-between gap-3">
-	                            <p className="text-sm text-card-foreground whitespace-pre-wrap">{note}</p>
-	                            <Button
-	                              size="sm"
-	                              variant="ghost"
-	                              onClick={() => removeVendorNote(activeVendorProfile.vendor_id, idx)}
-	                            >
-	                              Remove
-	                            </Button>
-	                          </div>
-	                        </div>
-	                      ))}
-	                    </div>
-	                  )}
-	                </div>
-	              </TabsContent>
-	            </Tabs>
-	          )}
-
-	          <DialogFooter className="gap-2">
-	            <div className="mr-auto text-xs text-muted-foreground">
-	              Directory profile is mocked — fields align to Procore Directory shapes.
-	            </div>
-	            <Button variant="outline" onClick={() => setVendorProfileId(null)}>
-	              Close
-	            </Button>
-	            {activeVendorProfile && workspaceView === "matching" && (
-	              <Button
-	                className="bg-bannett-navy hover:bg-bannett-navy/90"
-	                onClick={() => toggleSubSelection(activeVendorProfile.vendor_id)}
-	              >
-	                {selectedSubs.includes(activeVendorProfile.vendor_id) ? "Remove from Selection" : "Add to Selection"}
-	              </Button>
-	            )}
-	          </DialogFooter>
-	        </DialogContent>
-	      </Dialog>
-	    </div>
-	  )
+            <Button variant="outline" onClick={() => setVendorProfileId(null)}>
+              Close
+            </Button>
+            {activeVendorProfile && workspaceView === "matching" && (
+              <Button
+                className="bg-bannett-navy hover:bg-bannett-navy/90"
+                onClick={() => toggleSubSelection(activeVendorProfile.vendor_id)}
+              >
+                {selectedSubs.includes(activeVendorProfile.vendor_id) ? "Remove from Selection" : "Add to Selection"}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
 }

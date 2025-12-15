@@ -1,7 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Image from "next/image"
 import { Sidebar } from "@/components/sidebar"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet"
+import { Button } from "@/components/ui/button"
+import { Menu, Building2 } from "lucide-react"
 import { Dashboard } from "@/components/dashboard"
 import { AIEstimator } from "@/components/ai-estimator"
 import { SubcontractorMatching } from "@/components/subcontractor-matching"
@@ -34,6 +38,7 @@ export default function Home() {
   const [projects, setProjects] = useState<ProcoreProject[]>([])
   const [projectsLoading, setProjectsLoading] = useState(false)
   const [procoreConnected, setProcoreConnected] = useState(true)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     if (embed.embedded) {
@@ -157,19 +162,57 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-screen bg-sidebar">
-      <Sidebar
-        activeModule={activeModule}
-        setActiveModule={setActiveModule}
-        selectedProject={selectedProject}
-        setSelectedProject={handleSelectProject}
-        projects={projects}
-        projectsLoading={projectsLoading}
-        procoreConnected={procoreConnected}
-        onLogout={handleLogout}
-      />
-      <main className="flex-1 h-screen bg-sidebar min-h-0 overflow-hidden">
-        <div className="pl-0 pr-2 pt-3 pb-1 h-full bg-sidebar min-h-0">
+    <div className="flex h-screen bg-sidebar flex-col md:flex-row overflow-hidden">
+      {/* Mobile Header */}
+      <div className="md:hidden flex items-center justify-between p-4 border-b bg-sidebar border-sidebar-border shrink-0 h-16">
+        <div className="flex items-center gap-3">
+          <Image src="/images/image.png" alt="The Bannett Group Logo" width={32} height={32} />
+          <span className="font-semibold text-sidebar-foreground">The Bannett Group</span>
+        </div>
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="-mr-2">
+              <Menu className="w-6 h-6" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-72 border-r-sidebar-border bg-sidebar text-sidebar-foreground">
+            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+            <SheetDescription className="sr-only">Main navigation menu for mobile devices</SheetDescription>
+            <Sidebar
+              activeModule={activeModule}
+              setActiveModule={(m) => {
+                setActiveModule(m)
+                setMobileMenuOpen(false)
+              }}
+              selectedProject={selectedProject}
+              setSelectedProject={handleSelectProject}
+              projects={projects}
+              projectsLoading={projectsLoading}
+              procoreConnected={procoreConnected}
+              onLogout={handleLogout}
+              className="w-full border-none"
+            />
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex h-full shrink-0">
+        <Sidebar
+          activeModule={activeModule}
+          setActiveModule={setActiveModule}
+          selectedProject={selectedProject}
+          setSelectedProject={handleSelectProject}
+          projects={projects}
+          projectsLoading={projectsLoading}
+          procoreConnected={procoreConnected}
+          onLogout={handleLogout}
+        />
+      </div>
+
+      <main className="flex-1 h-[calc(100vh-64px)] md:h-screen bg-sidebar min-h-0 overflow-hidden">
+        <div className="px-0 md:pl-0 md:pr-2 pt-3 pb-1 h-full bg-sidebar min-h-0">
           {activeModule === "dashboard" ? (
             <div className="h-full min-h-0">
               <Dashboard selectedProject={selectedProject} setActiveModule={setActiveModule} onLogout={handleLogout} />

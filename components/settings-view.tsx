@@ -49,7 +49,7 @@ export function SettingsView({ onLogout, setActiveModule }: SettingsViewProps) {
   return (
     <div className="pt-0 pr-0 pb-1 pl-0 space-y-2 h-full flex flex-col min-h-0">
       {/* Header */}
-      <div className="flex items-center justify-between px-6">
+      <div className="flex items-center justify-between px-3 md:px-6">
         <div>
           <h1 className="text-xl md:text-2xl font-semibold text-foreground">Settings</h1>
         </div>
@@ -93,7 +93,7 @@ export function SettingsView({ onLogout, setActiveModule }: SettingsViewProps) {
                     <div className="w-9 h-9 rounded-full bg-bannett-navy flex items-center justify-center">
                       <User className="w-5 h-5 text-primary-foreground" />
                     </div>
-                    <div className="text-left">
+                    <div className="hidden md:block text-left">
                       <p className="text-sm font-medium text-foreground leading-tight">Sarah Chen</p>
                       <p className="text-xs text-muted-foreground leading-tight">Project Manager</p>
                     </div>
@@ -112,9 +112,9 @@ export function SettingsView({ onLogout, setActiveModule }: SettingsViewProps) {
       </div>
 
       {/* Content */}
-      <Card className="shadow-sm flex-1 min-h-0">
+      <Card className="shadow-sm flex-1 min-h-0 p-0 md:p-6">
         <CardContent className="p-0 h-full overflow-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
-          <div className="px-6 py-0">
+          <div className="px-1 md:px-6 py-0">
             <Tabs defaultValue="account" className="space-y-6 h-full flex flex-col">
               <TabsList className="w-full justify-start">
                 <TabsTrigger value="account">Account</TabsTrigger>
