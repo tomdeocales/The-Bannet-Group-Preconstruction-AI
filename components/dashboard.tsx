@@ -1027,14 +1027,14 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
         </div>
       </div>
 
-      <Card className="flex-1 min-h-0 p-0 md:p-6">
-        <CardContent className="space-y-6 p-1 md:p-6 h-full overflow-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
+      <Card className="flex-1 min-h-0 p-0 sm:p-4 md:p-6">
+        <CardContent className="space-y-6 p-1 sm:p-4 md:p-6 h-full overflow-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-0.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted [&::-webkit-scrollbar-thumb]:rounded-full">
           {/* KPI Cards */}
           {isRefreshing ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               {Array.from({ length: 4 }).map((_, i) => (
                 <Card key={i} className="bg-card">
-                  <CardContent className="p-3 md:p-5 space-y-3">
+                  <CardContent className="p-3 sm:p-4 xl:p-5 space-y-3">
                     <Skeleton className="h-4 w-28" />
                     <Skeleton className="h-10 w-16" />
                     <Skeleton className="h-4 w-24" />
@@ -1043,24 +1043,34 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               {kpis.map((kpi) => (
                 <Card
                   key={kpi.label}
                   className="cursor-pointer transition-shadow bg-card"
                   onClick={() => setSelectedKpi(kpi)}
                 >
-                  <CardContent className="p-3 md:p-5">
+                  <CardContent className="p-3 sm:p-4 xl:p-5">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">{kpi.label}</p>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          {kpi.label === "Zoning Issues" ? (
+                            <>
+                              Zoning<span className="xl:hidden 2xl:inline"> </span>
+                              <br className="hidden xl:block 2xl:hidden" />
+                              Issues
+                            </>
+                          ) : (
+                            kpi.label
+                          )}
+                        </p>
                         <p className="text-3xl font-semibold text-card-foreground">{kpi.value}</p>
                         <div className="flex items-center gap-1 mt-2">
                           <TrendingUp className="w-3 h-3 text-success" />
                           <span className="text-xs text-muted-foreground">{kpi.change}</span>
                         </div>
                       </div>
-                      <div className={`w-12 h-12 rounded-xl ${kpi.color} flex items-center justify-center`}>
+                      <div className={`w-12 h-12 shrink-0 rounded-xl ${kpi.color} flex items-center justify-center`}>
                         <kpi.icon className="w-6 h-6 text-primary-foreground" />
                       </div>
                     </div>
@@ -1074,17 +1084,17 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             {/* Activity Feed */}
             <div className="lg:col-span-2">
-              <div className="flex flex-col md:flex-row md:items-center justify-between px-1 pt-1 pb-3 gap-4 md:gap-0">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between px-1 pt-1 pb-3 gap-4 sm:gap-0">
                 <div className="flex items-center gap-2">
                   <CardTitle className="text-2xl font-semibold text-card-foreground">Recent Activity</CardTitle>
                   <Badge variant="secondary">{filteredActivity.length} updates</Badge>
                 </div>
-                <div className="flex items-center gap-2 w-full md:w-auto">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   <div className="relative flex-1 md:flex-none">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       placeholder="Search activity..."
-                      className="pl-9 w-full md:w-48 h-9"
+                      className="pl-9 w-full sm:w-48 h-9"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -1131,7 +1141,7 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
               {isRefreshing ? (
                 <div className="space-y-3 px-1 py-1 max-h-[480px] overflow-hidden pb-2 border-b border-border">
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="flex items-start gap-3 p-2 md:p-3 rounded-lg bg-muted/30">
+                    <div key={i} className="flex items-start gap-3 p-2 sm:p-3 rounded-lg bg-muted/30">
                       <Skeleton className="h-8 w-8 rounded-full" />
                       <div className="flex-1 space-y-2">
                         <Skeleton className="h-4 w-[85%]" />
@@ -1154,7 +1164,7 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
                           type="button"
                           aria-expanded={selectedActivity?.id === item.id}
                           aria-controls={`activity-details-${item.id}`}
-                          className="w-full text-left flex items-start gap-3 p-2 md:p-3 rounded-lg cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-bannett-blue hover:bg-muted/50"
+                          className="w-full text-left flex items-start gap-3 p-2 sm:p-3 rounded-lg cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-bannett-blue hover:bg-muted/50"
                           onClick={() => setSelectedActivity((prev) => (prev?.id === item.id ? null : item))}
                         >
                           <div className="w-8 h-8 rounded-full bg-bannett-navy/10 flex items-center justify-center flex-shrink-0">
@@ -1334,11 +1344,12 @@ export function Dashboard({ selectedProject, setActiveModule, onLogout }: Dashbo
                   quickActions.map((action) => (
                     <Button
                       key={action.id}
-                      className={action.className}
                       variant={action.variant}
+                      className={`w-full justify-start h-auto py-2 px-4 whitespace-normal text-left ${action.variant === "default" ? "bg-bannett-navy hover:bg-bannett-navy/90" : "bg-transparent"
+                        }`}
                       onClick={action.onClick}
                     >
-                      <action.icon className="w-4 h-4 mr-2" />
+                      <action.icon className="w-4 h-4 mr-2 shrink-0" />
                       {action.label}
                     </Button>
                   ))
